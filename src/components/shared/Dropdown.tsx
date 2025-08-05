@@ -13,7 +13,6 @@ export interface DropdownProps {
   placeholder?: string;
   align?: "left" | "right";
   showSearch?: boolean;
-  headerRight?: React.ReactNode;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -28,8 +27,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   selected,
   placeholder = "Search...",
   align = "left",
-  showSearch = true,
-  headerRight,
+  showSearch = true
 }) => {
   const panelAlignClass = align === "right" ? "right-0" : "left-0";
 
@@ -64,7 +62,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
             >
               Clear
             </button>
-            {headerRight}
           </div>
           <div className="max-h-48 overflow-auto">
             {items.length === 0 && (

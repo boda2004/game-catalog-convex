@@ -152,7 +152,6 @@ export function ViewControls({
             placeholder="Search columns..."
             align="right"
             showSearch={true}
-            headerRight={<span className="text-[10px] text-gray-600">Visible Columns</span>}
           />
         </div>
       )}
