@@ -256,21 +256,23 @@ export function GameTable({
                       onClick={() => isSortable && handleHeaderClick(field)}
                     >
                       <div className="flex items-center">
-                        <span>{fieldLabels[field] || field}</span>
-                        {sortBy === field && (
-                          <span className="ml-1">
-                            {sortOrder === "asc" ? "↑" : "↓"}
-                          </span>
+                        {!isFilterableCombo && (
+                          <>
+                            <span>{fieldLabels[field] || field}</span>
+                            {sortBy === field && !isFilterableCombo && (
+                              <span className="ml-1">{sortOrder === "asc" ? "↑" : "↓"}</span>
+                            )}
+                          </>
                         )}
                       </div>
                       {isFilterableCombo && (
-                        <div className="mt-2">
+                        <div className="flex items-center h-5">
                           {field === 'platforms' ? (
                             <div className="relative">
                               <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
                                 <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
-                                <span className="text-[10px] text-gray-500">{platformOpen ? "▲" : "▼"}</span>
-                              </button>
+                                <span className="ml-1.5 text-[10px] text-gray-500">{platformOpen ? "▲" : "▼"}</span>
+                                                              </button>
                               {platformOpen && (
                                 <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
                                   <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
@@ -304,7 +306,7 @@ export function GameTable({
                             <div className="relative">
                               <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
                                 <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
-                                <span className="text-[10px] text-gray-500">{genreOpen ? "▲" : "▼"}</span>
+                                <span className="ml-1.5 text-[10px] text-gray-500">{genreOpen ? "▲" : "▼"}</span>
                               </button>
                               {genreOpen && (
                                 <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
@@ -326,7 +328,7 @@ export function GameTable({
                                         key={g}
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); onGenreToggle(g); }}
-                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-purple-50 text-purple-700' : ''}`}
+                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-blue-50 text-blue-700' : ''}`}
                                       >
                                         {g}
                                       </button>
