@@ -4,7 +4,7 @@ import { api } from "../../convex/_generated/api";
 import { GameGrid } from "./GameGrid";
 import { GameTable } from "./GameTable";
 import { FilterBar } from "./FilterBar";
-import { ViewControls } from "./ViewControls";
+// ViewControls removed; controls are now integrated in GameGrid and GameTable
 import { PaginationControls } from "./PaginationControls";
 import { AddGameModal } from "./AddGameModal";
 import { BulkAddModal } from "./BulkAddModal";
@@ -163,16 +163,7 @@ export function GameCatalog() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      {/* View Controls */}
-      <ViewControls
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        onSortChange={handleSortChange}
-        visibleFields={preferences.visibleFields}
-        onToggleFieldVisibility={handleToggleFieldVisibility}
-        viewMode={preferences.viewMode}
-      />
-
+      {/* Controls moved into GameGrid and GameTable top blocks */}
       {/* Games Display */}
       <div className="relative">
         {games.length === 0 && !isFetching ? (
@@ -212,11 +203,12 @@ export function GameCatalog() {
             visibleFields={preferences.visibleFields}
             selectedPlatforms={selectedPlatforms}
             selectedGenres={selectedGenres}
-            onPlatformToggle={handlePlatformToggle}
-            onGenreToggle={handleGenreToggle}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
+            onToggleFieldVisibility={handleToggleFieldVisibility}
+            onPlatformToggle={handlePlatformToggle}
+            onGenreToggle={handleGenreToggle}
           />
         )}
       </div>

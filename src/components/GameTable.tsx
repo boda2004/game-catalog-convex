@@ -29,6 +29,7 @@ interface GameTableProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
+  onToggleFieldVisibility: (field: string) => void;
 }
 
 export function GameTable({ 
@@ -41,9 +42,23 @@ export function GameTable({
   sortBy,
   sortOrder,
   onSortChange,
+  onToggleFieldVisibility,
 }: GameTableProps) {
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [columnsQuery, setColumnsQuery] = useState("");
 
+  const allTableFields = [
+    { key: "name", label: "Name" },
+    { key: "platforms", label: "Platforms" },
+    { key: "genres", label: "Genres" },
+    { key: "rating", label: "Rating" },
+    { key: "metacritic", label: "Metacritic" },
+    { key: "released", label: "Released" },
+    { key: "developers", label: "Developer" },
+    { key: "publishers", label: "Publisher" },
+    { key: "userAddedAt", label: "Added" },
+  ];
   const fieldLabels: Record<string, string> = {
     name: "Name",
     platforms: "Platforms",
@@ -239,6 +254,55 @@ export function GameTable({
 
   return (
     <>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Sort controls */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Sort by:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value, sortOrder)}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="userAddedAt">Date Added</option>
+            <option value="name">Name</option>
+            <option value="rating">Rating</option>
+            <option value="metacritic">Metacritic</option>
+            <option value="released">Release Date</option>
+          </select>
+          <button
+            onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
+            className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {sortOrder === "asc" ? "↑" : "↓"}
+          </button>
+        </div>
+        {/* Column visibility dropdown (moved from ViewControls into table top block) */}
+        <div className="relative">
+          <Dropdown
+            label="Columns"
+            isOpen={columnsOpen}
+            count={visibleFields.length}
+            query={columnsQuery}
+            setOpen={setColumnsOpen}
+            setQuery={setColumnsQuery}
+            items={allTableFields
+              .filter(f => f.label.toLowerCase().includes(columnsQuery.toLowerCase()))
+              .map(f => f.label)}
+            onToggle={(label) => {
+              const field = allTableFields.find(f => f.label === label);
+              if (!field || field.key === "name") return; // keep Name always visible
+              onToggleFieldVisibility(field.key);
+            }}
+            selected={allTableFields
+              .filter(f => visibleFields.includes(f.key))
+              .map(f => f.label)}
+            placeholder="Search columns..."
+            align="right"
+            showSearch={true}
+          />
+        </div>
+      </div>
+
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
