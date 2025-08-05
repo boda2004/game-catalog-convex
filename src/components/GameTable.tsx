@@ -3,6 +3,7 @@ import { GameDetailModal } from "./GameDetailModal";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Dropdown } from "./shared/Dropdown";
 
 interface Game {
   _id: Id<"games">;
@@ -268,75 +269,31 @@ export function GameTable({
                       {isFilterableCombo && (
                         <div className="flex items-center h-5">
                           {field === 'platforms' ? (
-                            <div className="relative">
-                              <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
-                                <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
-                                <span className="ml-1.5 text-[10px] text-gray-500">{platformOpen ? "▲" : "▼"}</span>
-                                                              </button>
-                              {platformOpen && (
-                                <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
-                                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
-                                    <input
-                                      value={platformQuery}
-                                      onChange={(e) => setPlatformQuery(e.target.value)}
-                                      placeholder="Filter platforms..."
-                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                                    />
-                                    <button type="button" onClick={clearPlatforms} className="text-[10px] px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
-                                  </div>
-                                  <div className="max-h-48 overflow-auto">
-                                    {filteredPlatforms.length === 0 && (
-                                      <div className="px-2 py-2 text-[11px] text-gray-500">No results</div>
-                                    )}
-                                    {filteredPlatforms.map(p => (
-                                      <button
-                                        key={p}
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); onPlatformToggle(p); }}
-                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedPlatforms.includes(p) ? 'bg-blue-50 text-blue-700' : ''}`}
-                                      >
-                                        {p}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            <Dropdown
+                              label="Platforms"
+                              isOpen={platformOpen}
+                              count={selectedPlatforms.length}
+                              query={platformQuery}
+                              setOpen={setPlatformOpen}
+                              setQuery={setPlatformQuery}
+                              items={filteredPlatforms}
+                              onToggle={onPlatformToggle}
+                              selected={selectedPlatforms}
+                              placeholder="Filter platforms..."
+                            />
                           ) : (
-                            <div className="relative">
-                              <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
-                                <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
-                                <span className="ml-1.5 text-[10px] text-gray-500">{genreOpen ? "▲" : "▼"}</span>
-                              </button>
-                              {genreOpen && (
-                                <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
-                                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
-                                    <input
-                                      value={genreQuery}
-                                      onChange={(e) => setGenreQuery(e.target.value)}
-                                      placeholder="Filter genres..."
-                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
-                                    />
-                                    <button type="button" onClick={clearGenres} className="text-[10px] px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
-                                  </div>
-                                  <div className="max-h-48 overflow-auto">
-                                    {filteredGenres.length === 0 && (
-                                      <div className="px-2 py-2 text-[11px] text-gray-500">No results</div>
-                                    )}
-                                    {filteredGenres.map(g => (
-                                      <button
-                                        key={g}
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); onGenreToggle(g); }}
-                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-blue-50 text-blue-700' : ''}`}
-                                      >
-                                        {g}
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            <Dropdown
+                              label="Genres"
+                              isOpen={genreOpen}
+                              count={selectedGenres.length}
+                              query={genreQuery}
+                              setOpen={setGenreOpen}
+                              setQuery={setGenreQuery}
+                              items={filteredGenres}
+                              onToggle={onGenreToggle}
+                              selected={selectedGenres}
+                              placeholder="Filter genres..."
+                            />
                           )}
                         </div>
                       )}

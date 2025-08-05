@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Dropdown } from "./shared/Dropdown";
 
 interface ViewControlsProps {
   viewMode: "grid" | "table";
@@ -44,6 +45,7 @@ export function ViewControls({
   onToggleFieldVisibility,
 }: ViewControlsProps) {
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
+  const [columnQuery, setColumnQuery] = useState("");
   const columnSelectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -129,39 +131,33 @@ export function ViewControls({
       {/* Column Visibility Controls (only for table view) */}
       {viewMode === "table" && (
         <div className="relative" ref={columnSelectorRef}>
-          <button
-            onClick={() => setIsColumnSelectorOpen((prev) => !prev)}
-            className="flex items-center gap-2 px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <span>Columns</span>
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-          </button>
-          {isColumnSelectorOpen && (
-            <div className="absolute z-20 top-full right-0 mt-2 w-56 bg-white rounded-md shadow-lg border border-gray-200">
-              <div className="p-2 text-sm font-medium text-gray-800 border-b">
-                Visible Columns
-              </div>
-              <div className="py-1">
-                {allTableFields.map((field) => (
-                  <label
-                    key={field.key}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                      checked={visibleFields.includes(field.key)}
-                      onChange={() => onToggleFieldVisibility(field.key)}
-                      disabled={field.key === 'name'}
-                    />
-                    <span className="text-sm text-gray-700">{field.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
+          <Dropdown
+            label="Columns"
+            isOpen={isColumnSelectorOpen}
+            count={visibleFields.length}
+            query={columnQuery}
+            setOpen={setIsColumnSelectorOpen}
+            setQuery={setColumnQuery}
+            items={allTableFields
+              .filter(f => f.label.toLowerCase().includes(columnQuery.toLowerCase()))
+              .map(f => f.label)}
+            onToggle={(label) => {
+              const field = allTableFields.find(f => f.label === label);
+              if (!field || field.key === "name") return; // keep Name always visible
+              onToggleFieldVisibility(field.key);
+            }}
+            selected={allTableFields
+              .filter(f => visibleFields.includes(f.key))
+              .map(f => f.label)}
+            placeholder="Search columns..."
+            align="right"
+            showSearch={true}
+            headerRight={<span className="text-[10px] text-gray-600">Visible Columns</span>}
+          />
         </div>
       )}
     </div>
   );
 }
+
+// Replace Columns dropdown implementation below with shared Dropdown usage
