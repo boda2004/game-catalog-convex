@@ -157,19 +157,20 @@ export function GameCatalog() {
         onPlatformToggle={handlePlatformToggle}
         onGenreToggle={handleGenreToggle}
         onClearFilters={handleClearFilters}
-      />
-
-      {/* View Controls */}
-      <ViewControls
         viewMode={preferences.viewMode}
         onViewModeChange={handleViewModeChange}
         itemsPerPage={preferences.itemsPerPage}
         onItemsPerPageChange={handleItemsPerPageChange}
+      />
+
+      {/* View Controls */}
+      <ViewControls
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
         visibleFields={preferences.visibleFields}
         onToggleFieldVisibility={handleToggleFieldVisibility}
+        viewMode={preferences.viewMode}
       />
 
       {/* Games Display */}

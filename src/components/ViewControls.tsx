@@ -2,15 +2,12 @@ import { useState, useRef, useEffect } from "react";
 import { Dropdown } from "./shared/Dropdown";
 
 interface ViewControlsProps {
-  viewMode: "grid" | "table";
-  onViewModeChange: (mode: "grid" | "table") => void;
-  itemsPerPage: number;
-  onItemsPerPageChange: (count: number) => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
   visibleFields: string[];
   onToggleFieldVisibility: (field: string) => void;
+  viewMode: "grid" | "table";
 }
 
 const sortOptions = [
@@ -34,15 +31,12 @@ const allTableFields = [
 ];
 
 export function ViewControls({
-  viewMode,
-  onViewModeChange,
-  itemsPerPage,
-  onItemsPerPageChange,
   sortBy,
   sortOrder,
   onSortChange,
   visibleFields,
   onToggleFieldVisibility,
+  viewMode,
 }: ViewControlsProps) {
   const [isColumnSelectorOpen, setIsColumnSelectorOpen] = useState(false);
   const [columnQuery, setColumnQuery] = useState("");
@@ -65,33 +59,6 @@ export function ViewControls({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-lg border border-gray-200">
-      {/* View Mode Controls */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">View:</span>
-        <div className="flex rounded-md border border-gray-300">
-          <button
-            onClick={() => onViewModeChange("grid")}
-            className={`px-3 py-1 text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              viewMode === "grid"
-                ? "bg-blue-600 text-white"
-                : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Grid
-          </button>
-          <button
-            onClick={() => onViewModeChange("table")}
-            className={`px-3 py-1 text-sm rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              viewMode === "table"
-                ? "bg-blue-600 text-white"
-                : "bg-white hover:bg-gray-50"
-            }`}
-          >
-            Table
-          </button>
-        </div>
-      </div>
-
       {/* Sort Controls */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-gray-700">Sort by:</span>
@@ -112,20 +79,6 @@ export function ViewControls({
         >
           {sortOrder === "asc" ? "↑" : "↓"}
         </button>
-      </div>
-
-      {/* Items Per Page Controls */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-gray-700">Per page:</span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-          className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value={12}>12</option>
-          <option value={24}>24</option>
-          <option value={48}>48</option>
-        </select>
       </div>
 
       {/* Column Visibility Controls (only for table view) */}
