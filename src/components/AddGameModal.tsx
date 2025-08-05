@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
@@ -15,9 +15,10 @@ interface Game {
 interface AddGameModalProps {
   onClose: () => void;
   onGameAdded?: () => void;
+  existingRawgIds?: number[];
 }
 
-export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
+export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: AddGameModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Game[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -25,6 +26,8 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
 
   const searchGames = useAction(api.rawg.searchGamesPublic);
   const addGame = useAction(api.rawg.addGame);
+
+  const existingIdsSet = useMemo(() => new Set(existingRawgIds), [existingRawgIds]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -41,6 +44,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
   };
 
   const handleAddGame = async (gameId: number) => {
+    if (existingIdsSet.has(gameId)) return;
     setIsAdding(true);
     try {
       await addGame({ rawgId: gameId });
@@ -49,7 +53,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
       onClose();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      if (errorMessage.includes("already in catalog")) {
+      if (errorMessage.includes("already in catalog") || errorMessage.includes("already in your collection")) {
         toast.error("Game is already in your catalog");
       } else {
         toast.error("Failed to add game");
@@ -101,39 +105,42 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
         <div className="p-6 overflow-y-auto max-h-[60vh]">
           {searchResults.length > 0 ? (
             <div className="space-y-4">
-              {searchResults.map((game) => (
-                <div
-                  key={game.id}
-                  className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
-                >
-                  {game.background_image && (
-                    <img
-                      src={game.background_image}
-                      alt={game.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{game.name}</h3>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      {game.released && <p>Released: {game.released}</p>}
-                      {game.rating && <p>Rating: {game.rating}/5</p>}
-                      {game.platforms && (
-                        <p>
-                          Platforms: {game.platforms.map(p => p.platform.name).join(", ")}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleAddGame(game.id)}
-                    disabled={isAdding}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              {searchResults.map((game) => {
+                const alreadyAdded = existingIdsSet.has(game.id);
+                return (
+                  <div
+                    key={game.id}
+                    className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
                   >
-                    {isAdding ? "Adding..." : "Add"}
-                  </button>
-                </div>
-              ))}
+                    {game.background_image && (
+                      <img
+                        src={game.background_image}
+                        alt={game.name}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{game.name}</h3>
+                      <div className="text-sm text-gray-600 space-y-1">
+                        {game.released && <p>Released: {game.released}</p>}
+                        {game.rating && <p>Rating: {game.rating}/5</p>}
+                        {game.platforms && (
+                          <p>
+                            Platforms: {game.platforms.map(p => p.platform.name).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleAddGame(game.id)}
+                      disabled={isAdding || alreadyAdded}
+                      className={`px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${alreadyAdded ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                    >
+                      {alreadyAdded ? "Added" : (isAdding ? "Adding..." : "Add")}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : searchQuery && !isSearching ? (
             <p className="text-center text-gray-500 py-8">

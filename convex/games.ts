@@ -141,6 +141,28 @@ export const getUserGames = query({
   },
 });
 
+export const getOwnedRawgIds = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getLoggedInUser(ctx);
+    const userGameRelations = await ctx.db
+      .query("userGames")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    if (userGameRelations.length === 0) return [] as number[];
+
+    const gameIds = userGameRelations.map((rel) => rel.gameId);
+    const games = await Promise.all(gameIds.map((id) => ctx.db.get(id)));
+    const rawgIds = games
+      .filter((g) => g && typeof g.rawgId === "number")
+      .map((g: any) => g.rawgId as number);
+
+    // Deduplicate just in case
+    return Array.from(new Set(rawgIds));
+  },
+});
+
 export const getGameById = query({
   args: { gameId: v.id("games") },
   handler: async (ctx, args) => {
