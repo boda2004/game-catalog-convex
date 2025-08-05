@@ -1,6 +1,8 @@
 import { Id } from "../../convex/_generated/dataModel";
 import { GameDetailModal } from "./GameDetailModal";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface Game {
   _id: Id<"games">;
@@ -86,7 +88,6 @@ export function GameTable({
             <span className="font-medium text-gray-900">{game.name}</span>
           </div>
         );
-      
       case "platforms":
         return (
           <div className="flex flex-wrap gap-1">
@@ -116,7 +117,6 @@ export function GameTable({
             )}
           </div>
         );
-      
       case "genres":
         return (
           <div className="flex flex-wrap gap-1">
@@ -146,7 +146,6 @@ export function GameTable({
             )}
           </div>
         );
-      
       case "rating":
         return game.rating ? (
           <div className="flex items-center gap-1">
@@ -158,7 +157,6 @@ export function GameTable({
         ) : (
           <span className="text-gray-400">-</span>
         );
-      
       case "metacritic":
         return game.metacritic ? (
           <div className="inline-flex items-center px-2 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">
@@ -167,14 +165,12 @@ export function GameTable({
         ) : (
           <span className="text-gray-400">-</span>
         );
-      
       case "released":
         return game.released ? (
           <span>{new Date(game.released).toLocaleDateString()}</span>
         ) : (
           <span className="text-gray-400">-</span>
         );
-      
       case "developers":
         return (
           <span className="text-sm text-gray-600">
@@ -182,7 +178,6 @@ export function GameTable({
             {game.developers.length > 2 && ` +${game.developers.length - 2}`}
           </span>
         );
-      
       case "publishers":
         return (
           <span className="text-sm text-gray-600">
@@ -190,7 +185,6 @@ export function GameTable({
             {game.publishers.length > 2 && ` +${game.publishers.length - 2}`}
           </span>
         );
-      
       case "userAddedAt":
         return game.userAddedAt ? (
           <span className="text-sm text-gray-600">
@@ -199,10 +193,47 @@ export function GameTable({
         ) : (
           <span className="text-gray-400">-</span>
         );
-      
       default:
         return null;
     }
+  };
+
+  const [platformQuery, setPlatformQuery] = useState("");
+  const [genreQuery, setGenreQuery] = useState("");
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [genreOpen, setGenreOpen] = useState(false);
+
+  const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
+  const allGenresQuery = useQuery(api.games.getAllGenres);
+
+  const allPlatforms = useMemo(() => {
+    if (allPlatformsQuery && Array.isArray(allPlatformsQuery)) {
+      return [...new Set(allPlatformsQuery)].sort();
+    }
+    const s = new Set<string>();
+    games.forEach(g => g.platforms.forEach(p => s.add(p)));
+    return Array.from(s).sort();
+  }, [allPlatformsQuery, games]);
+
+  const allGenres = useMemo(() => {
+    if (allGenresQuery && Array.isArray(allGenresQuery)) {
+      return [...new Set(allGenresQuery)].sort();
+    }
+    const s = new Set<string>();
+    games.forEach(g => g.genres.forEach(x => s.add(x)));
+    return Array.from(s).sort();
+  }, [allGenresQuery, games]);
+
+  const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
+  const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
+
+  const clearPlatforms = () => {
+    selectedPlatforms.forEach(p => onPlatformToggle(p));
+    setPlatformQuery("");
+  };
+  const clearGenres = () => {
+    selectedGenres.forEach(g => onGenreToggle(g));
+    setGenreQuery("");
   };
 
   return (
@@ -214,6 +245,7 @@ export function GameTable({
               <tr>
                 {visibleFields.map((field) => {
                   const isSortable = sortableFields.includes(field);
+                  const isFilterableCombo = field === 'platforms' || field === 'genres';
                   return (
                     <th
                       key={field}
@@ -231,6 +263,81 @@ export function GameTable({
                           </span>
                         )}
                       </div>
+                      {isFilterableCombo && (
+                        <div className="mt-2">
+                          {field === 'platforms' ? (
+                            <div className="relative">
+                              <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
+                                <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
+                                <span className="text-[10px] text-gray-500">{platformOpen ? "▲" : "▼"}</span>
+                              </button>
+                              {platformOpen && (
+                                <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
+                                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+                                    <input
+                                      value={platformQuery}
+                                      onChange={(e) => setPlatformQuery(e.target.value)}
+                                      placeholder="Filter platforms..."
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                                    />
+                                    <button type="button" onClick={clearPlatforms} className="text-[10px] px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                                  </div>
+                                  <div className="max-h-48 overflow-auto">
+                                    {filteredPlatforms.length === 0 && (
+                                      <div className="px-2 py-2 text-[11px] text-gray-500">No results</div>
+                                    )}
+                                    {filteredPlatforms.map(p => (
+                                      <button
+                                        key={p}
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); onPlatformToggle(p); }}
+                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedPlatforms.includes(p) ? 'bg-blue-50 text-blue-700' : ''}`}
+                                      >
+                                        {p}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white">
+                                <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
+                                <span className="text-[10px] text-gray-500">{genreOpen ? "▲" : "▼"}</span>
+                              </button>
+                              {genreOpen && (
+                                <div className="absolute left-0 mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20">
+                                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+                                    <input
+                                      value={genreQuery}
+                                      onChange={(e) => setGenreQuery(e.target.value)}
+                                      placeholder="Filter genres..."
+                                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                                    />
+                                    <button type="button" onClick={clearGenres} className="text-[10px] px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                                  </div>
+                                  <div className="max-h-48 overflow-auto">
+                                    {filteredGenres.length === 0 && (
+                                      <div className="px-2 py-2 text-[11px] text-gray-500">No results</div>
+                                    )}
+                                    {filteredGenres.map(g => (
+                                      <button
+                                        key={g}
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); onGenreToggle(g); }}
+                                        className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-purple-50 text-purple-700' : ''}`}
+                                      >
+                                        {g}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </th>
                   );
                 })}

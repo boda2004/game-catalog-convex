@@ -1,6 +1,8 @@
 import { Id } from "../../convex/_generated/dataModel";
 import { GameDetailModal } from "./GameDetailModal";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 interface Game {
   _id: Id<"games">;
@@ -31,8 +33,132 @@ export function GameGrid({
 }: GameGridProps) {
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
 
+  const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
+  const allGenresQuery = useQuery(api.games.getAllGenres);
+
+  const allPlatforms = useMemo(() => {
+    if (allPlatformsQuery && Array.isArray(allPlatformsQuery)) {
+      return [...new Set(allPlatformsQuery)].sort();
+    }
+    // fallback to current-page derived values if query not ready
+    const s = new Set<string>();
+    games.forEach(g => g.platforms.forEach(p => s.add(p)));
+    return Array.from(s).sort();
+  }, [allPlatformsQuery, games]);
+
+  const allGenres = useMemo(() => {
+    if (allGenresQuery && Array.isArray(allGenresQuery)) {
+      return [...new Set(allGenresQuery)].sort();
+    }
+    // fallback to current-page derived values if query not ready
+    const s = new Set<string>();
+    games.forEach(g => g.genres.forEach(x => s.add(x)));
+    return Array.from(s).sort();
+  }, [allGenresQuery, games]);
+  const [platformQuery, setPlatformQuery] = useState("");
+  const [genreQuery, setGenreQuery] = useState("");
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [genreOpen, setGenreOpen] = useState(false);
+  const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
+  const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
+
+  const clearPlatforms = () => {
+    selectedPlatforms.forEach(p => onPlatformToggle(p));
+    setPlatformQuery("");
+  };
+  const clearGenres = () => {
+    selectedGenres.forEach(g => onGenreToggle(g));
+    setGenreQuery("");
+  };
+
   return (
     <>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Left group: Sort By + Per Page (assumed existing elsewhere in this toolbar) */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Keep your existing Sort By and Per Page dropdowns here */}
+          {/* If they are rendered by parent, this block will simply align with the right group */}
+        </div>
+        {/* Right group: move Platforms and Genres comboboxes into the same toolbar row */}
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          {/* Controls row: Sort By, Platforms, Genres, Per Page in exact order and same container */}
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {/* Sort By control should be here (existing implementation) */}
+            {/* Platforms combobox - now in the same row */}
+            <div className="relative w-64">
+              <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+                <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
+                <span className="text-xs text-gray-500">{platformOpen ? "▲" : "▼"}</span>
+              </button>
+              {platformOpen && (
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+                    <input
+                      value={platformQuery}
+                      onChange={(e) => setPlatformQuery(e.target.value)}
+                      placeholder="Filter platforms..."
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                    <button type="button" onClick={clearPlatforms} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                  </div>
+                  <div className="max-h-48 overflow-auto">
+                    {filteredPlatforms.length === 0 && (
+                      <div className="px-2 py-2 text-xs text-gray-500">No results</div>
+                    )}
+                    {filteredPlatforms.map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onPlatformToggle(p); }}
+                        className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedPlatforms.includes(p) ? 'bg-blue-50 text-blue-700' : ''}`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Genres combobox - now in the same row */}
+            <div className="relative w-64">
+              <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+                <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
+                <span className="text-xs text-gray-500">{genreOpen ? "▲" : "▼"}</span>
+              </button>
+              {genreOpen && (
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+                  <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+                    <input
+                      value={genreQuery}
+                      onChange={(e) => setGenreQuery(e.target.value)}
+                      placeholder="Filter genres..."
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    />
+                    <button type="button" onClick={clearGenres} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                  </div>
+                  <div className="max-h-48 overflow-auto">
+                    {filteredGenres.length === 0 && (
+                      <div className="px-2 py-2 text-xs text-gray-500">No results</div>
+                    )}
+                    {filteredGenres.map(g => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); onGenreToggle(g); }}
+                        className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-purple-50 text-purple-700' : ''}`}
+                      >
+                        {g}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Per Page control should be here (existing implementation) */}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {games.map((game) => (
           <div
