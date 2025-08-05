@@ -1,6 +1,6 @@
 import { Id } from "../../convex/_generated/dataModel";
 import { GameDetailModal } from "./GameDetailModal";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Dropdown } from "./shared/Dropdown";
@@ -47,6 +47,43 @@ export function GameTable({
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [columnsQuery, setColumnsQuery] = useState("");
+
+  // Ensure dropdown open states are declared before using them in effects
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [genreOpen, setGenreOpen] = useState(false);
+
+  // Queries for dropdowns
+  const [platformQuery, setPlatformQuery] = useState("");
+  const [genreQuery, setGenreQuery] = useState("");
+
+  const columnsRef = useRef<HTMLDivElement | null>(null);
+  const platformRef = useRef<HTMLDivElement | null>(null);
+  const genreRef = useRef<HTMLDivElement | null>(null);
+
+  // Track latest open states via refs to avoid stale closures
+  const columnsOpenRef = useRef(columnsOpen);
+  const platformOpenRef = useRef(platformOpen);
+  const genreOpenRef = useRef(genreOpen);
+  useEffect(() => { columnsOpenRef.current = columnsOpen; }, [columnsOpen]);
+  useEffect(() => { platformOpenRef.current = platformOpen; }, [platformOpen]);
+  useEffect(() => { genreOpenRef.current = genreOpen; }, [genreOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (columnsOpenRef.current && columnsRef.current && !columnsRef.current.contains(target)) {
+        setColumnsOpen(false);
+      }
+      if (platformOpenRef.current && platformRef.current && !platformRef.current.contains(target)) {
+        setPlatformOpen(false);
+      }
+      if (genreOpenRef.current && genreRef.current && !genreRef.current.contains(target)) {
+        setGenreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const allTableFields = [
     { key: "name", label: "Name" },
@@ -213,11 +250,6 @@ export function GameTable({
         return null;
     }
   };
-
-  const [platformQuery, setPlatformQuery] = useState("");
-  const [genreQuery, setGenreQuery] = useState("");
-  const [platformOpen, setPlatformOpen] = useState(false);
-  const [genreOpen, setGenreOpen] = useState(false);
 
   const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
   const allGenresQuery = useQuery(api.games.getAllGenres);

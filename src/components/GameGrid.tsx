@@ -1,6 +1,6 @@
 import { Id } from "../../convex/_generated/dataModel";
 import { GameDetailModal } from "./GameDetailModal";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
@@ -71,6 +71,23 @@ export function GameGrid({
     setGenreQuery("");
   };
 
+  const platformRef = useRef<HTMLDivElement | null>(null);
+  const genreRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (platformOpen && platformRef.current && !platformRef.current.contains(target)) {
+        setPlatformOpen(false);
+      }
+      if (genreOpen && genreRef.current && !genreRef.current.contains(target)) {
+        setGenreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [platformOpen, genreOpen]);
+
   return (
     <>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -80,7 +97,7 @@ export function GameGrid({
         </div>
         {/* Platforms and Genres controls */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-64">
+          <div className="relative w-64" ref={platformRef}>
             <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
               <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
               <span className="text-xs text-gray-500">{platformOpen ? "▲" : "▼"}</span>
@@ -114,7 +131,7 @@ export function GameGrid({
               </div>
             )}
           </div>
-          <div className="relative w-64">
+          <div className="relative w-64" ref={genreRef}>
             <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
               <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
               <span className="text-xs text-gray-500">{genreOpen ? "▲" : "▼"}</span>
