@@ -65,6 +65,7 @@ export function GameGrid({
   const [genreQuery, setGenreQuery] = useState("");
   const [platformOpen, setPlatformOpen] = useState(false);
   const [genreOpen, setGenreOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
   const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
 
@@ -79,6 +80,7 @@ export function GameGrid({
 
   const platformRef = useRef<HTMLDivElement | null>(null);
   const genreRef = useRef<HTMLDivElement | null>(null);
+  const sortRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -89,10 +91,21 @@ export function GameGrid({
       if (genreOpen && genreRef.current && !genreRef.current.contains(target)) {
         setGenreOpen(false);
       }
+      if (sortOpen && sortRef.current && !sortRef.current.contains(target)) {
+        setSortOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [platformOpen, genreOpen]);
+  }, [platformOpen, genreOpen, sortOpen]);
+
+  const sortLabelMap: Record<string, string> = {
+    userAddedAt: "Date Added",
+    name: "Name",
+    rating: "Rating",
+    metacritic: "Metacritic",
+    released: "Release Date",
+  };
 
   return (
     <>
@@ -100,17 +113,40 @@ export function GameGrid({
         {/* Sort controls (left-aligned) */}
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => onSortChange(e.target.value, sortOrder)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="userAddedAt">Date Added</option>
-            <option value="name">Name</option>
-            <option value="rating">Rating</option>
-            <option value="metacritic">Metacritic</option>
-            <option value="released">Release Date</option>
-          </select>
+          <div className="relative w-48" ref={sortRef}>
+            <button
+              type="button"
+              onClick={() => setSortOpen((v) => !v)}
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white"
+            >
+              <span>{sortLabelMap[sortBy] ?? sortBy}</span>
+              <span className="text-xs text-gray-500">{sortOpen ? "▲" : "▼"}</span>
+            </button>
+            {sortOpen && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+                <div className="max-h-48 overflow-auto py-1">
+                  {Object.entries(sortLabelMap).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSortOpen(false);
+                        if (value !== sortBy) {
+                          onSortChange(value, sortOrder);
+                        }
+                      }}
+                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${
+                        sortBy === value ? "bg-blue-50 text-blue-700" : ""
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
             className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
