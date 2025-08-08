@@ -217,7 +217,7 @@ export function GameCatalog() {
       </div>
 
       {/* Pagination */}
-      {totalCount > preferences.itemsPerPage && (
+      {totalCount > 0 && (
         <PaginationControls
           currentPage={currentPage}
           totalItems={totalCount}
