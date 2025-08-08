@@ -3,6 +3,7 @@ import { action } from "./_generated/server";
 import { internal, api } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
+import { rawgFetchWithRetry } from "./rawgClient";
 
 // RAWG API integration actions
 export const searchGamesPublic = action({
@@ -13,7 +14,7 @@ export const searchGamesPublic = action({
       throw new Error("RAWG API key not configured");
     }
 
-    const response = await fetch(
+    const response = await rawgFetchWithRetry(
       `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(args.query)}&page_size=10`
     );
 
@@ -35,7 +36,7 @@ export const addGame = action({
     }
 
     // Fetch game details from RAWG
-    const response = await fetch(
+    const response = await rawgFetchWithRetry(
       `https://api.rawg.io/api/games/${args.rawgId}?key=${apiKey}`
     );
 
@@ -142,7 +143,7 @@ export const addGamesByNames = action({
     for (const gameName of args.gameNames) {
       try {
         // Search for the game
-        const searchResponse = await fetch(
+        const searchResponse = await rawgFetchWithRetry(
           `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(gameName)}&page_size=1`
         );
 
@@ -160,7 +161,7 @@ export const addGamesByNames = action({
         }
 
         // Get detailed game info
-        const detailResponse = await fetch(
+        const detailResponse = await rawgFetchWithRetry(
           `https://api.rawg.io/api/games/${game.id}?key=${apiKey}`
         );
 

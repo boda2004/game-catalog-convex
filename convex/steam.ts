@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { rawgFetchWithRetry } from "./rawgClient";
 
 type SteamOwnedGame = {
   appid: number;
@@ -118,7 +119,7 @@ export const importOwnedGames = action({
     for (const gameName of gameNames) {
       try {
         // RAWG search
-        const searchResponse = await fetch(
+        const searchResponse = await rawgFetchWithRetry(
           `https://api.rawg.io/api/games?key=${rawgApiKey}&search=${encodeURIComponent(gameName)}&page_size=1`,
         );
         if (!searchResponse.ok) {
@@ -132,7 +133,7 @@ export const importOwnedGames = action({
           continue;
         }
 
-        const detailResponse = await fetch(`https://api.rawg.io/api/games/${game.id}?key=${rawgApiKey}`);
+        const detailResponse = await rawgFetchWithRetry(`https://api.rawg.io/api/games/${game.id}?key=${rawgApiKey}`);
         if (!detailResponse.ok) {
           results.push({ name: gameName, success: false, error: "Failed to get details" });
           continue;
