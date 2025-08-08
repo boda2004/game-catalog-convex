@@ -32,9 +32,9 @@ jobs:
 
       - name: Build
         env:
-          # For project pages, GitHub Pages serves from /<repo-name>/
-          # For user/org pages (username.github.io), override BASE_PATH to "/" via workflow env or repo variables.
-          BASE_PATH: /${{ github.event.repository.name }}/
+          # BASE_PATH controls asset URLs. Default to project pages ("/<repo-name>/").
+          # For custom domains, set repo variable BASE_PATH to "/" in Settings → Secrets and variables → Actions → Variables.
+          BASE_PATH: ${{ vars.BASE_PATH || format('/{0}/', github.event.repository.name) }}
           # Provide your Convex deployment URL via repo secret Settings → Secrets → Actions
           VITE_CONVEX_URL: ${{ secrets.VITE_CONVEX_URL }}
         run: |
