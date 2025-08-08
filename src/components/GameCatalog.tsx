@@ -152,10 +152,6 @@ export function GameCatalog() {
       <FilterBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        selectedPlatforms={selectedPlatforms}
-        selectedGenres={selectedGenres}
-        onPlatformToggle={handlePlatformToggle}
-        onGenreToggle={handleGenreToggle}
         onClearFilters={handleClearFilters}
         viewMode={preferences.viewMode}
         onViewModeChange={handleViewModeChange}
