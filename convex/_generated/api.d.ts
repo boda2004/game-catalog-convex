@@ -19,6 +19,7 @@ import type * as gamesInternal from "../gamesInternal.js";
 import type * as http from "../http.js";
 import type * as rawg from "../rawg.js";
 import type * as router from "../router.js";
+import type * as steam from "../steam.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   rawg: typeof rawg;
   router: typeof router;
+  steam: typeof steam;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

@@ -44,23 +44,23 @@ export const addGame = action({
 
     const gameData = await response.json();
 
-    // Transform RAWG data to our format
+    // Transform RAWG data to our format with null -> undefined normalization
     const gameInfo = {
       rawgId: gameData.id,
       name: gameData.name,
       slug: gameData.slug,
-      backgroundImage: gameData.background_image,
-      released: gameData.released,
-      rating: gameData.rating,
-      metacritic: gameData.metacritic,
+      backgroundImage: gameData.background_image ?? undefined,
+      released: gameData.released ?? undefined,
+      rating: typeof gameData.rating === "number" ? gameData.rating : undefined,
+      metacritic: typeof gameData.metacritic === "number" ? gameData.metacritic : undefined,
       platforms: gameData.platforms?.map((p: any) => p.platform.name) || [],
       genres: gameData.genres?.map((g: any) => g.name) || [],
       developers: gameData.developers?.map((d: any) => d.name) || [],
       publishers: gameData.publishers?.map((p: any) => p.name) || [],
-      esrbRating: gameData.esrb_rating?.name,
-      playtime: gameData.playtime,
-      description: gameData.description_raw,
-      website: gameData.website,
+      esrbRating: gameData.esrb_rating?.name ?? undefined,
+      playtime: typeof gameData.playtime === "number" ? gameData.playtime : undefined,
+      description: gameData.description_raw ?? undefined,
+      website: gameData.website ?? undefined,
       tags: gameData.tags?.map((t: any) => t.name) || [],
     };
 
@@ -126,23 +126,23 @@ export const addGamesByNames = action({
 
         const gameData = await detailResponse.json();
 
-        // Transform and add game
+        // Transform and add game with null -> undefined normalization
         const gameInfo = {
           rawgId: gameData.id,
           name: gameData.name,
           slug: gameData.slug,
-          backgroundImage: gameData.background_image,
-          released: gameData.released,
-          rating: gameData.rating,
-          metacritic: gameData.metacritic,
+          backgroundImage: gameData.background_image ?? undefined,
+          released: gameData.released ?? undefined,
+          rating: typeof gameData.rating === "number" ? gameData.rating : undefined,
+          metacritic: typeof gameData.metacritic === "number" ? gameData.metacritic : undefined,
           platforms: gameData.platforms?.map((p: any) => p.platform.name) || [],
           genres: gameData.genres?.map((g: any) => g.name) || [],
           developers: gameData.developers?.map((d: any) => d.name) || [],
           publishers: gameData.publishers?.map((p: any) => p.name) || [],
-          esrbRating: gameData.esrb_rating?.name,
-          playtime: gameData.playtime,
-          description: gameData.description_raw,
-          website: gameData.website,
+          esrbRating: gameData.esrb_rating?.name ?? undefined,
+          playtime: typeof gameData.playtime === "number" ? gameData.playtime : undefined,
+          description: gameData.description_raw ?? undefined,
+          website: gameData.website ?? undefined,
           tags: gameData.tags?.map((t: any) => t.name) || [],
         };
 

@@ -236,8 +236,9 @@ export const addGameToUser = mutation({
       )
       .unique();
 
+    // If already in user's collection, return gracefully (idempotent)
     if (existingUserGame) {
-      throw new Error("Game already in your collection");
+      return gameId;
     }
 
     // Add game to user's collection

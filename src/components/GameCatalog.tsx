@@ -8,6 +8,7 @@ import { FilterBar } from "./FilterBar";
 import { PaginationControls } from "./PaginationControls";
 import { AddGameModal } from "./AddGameModal";
 import { BulkAddModal } from "./BulkAddModal";
+import { ImportSteamModal } from "./ImportSteamModal";
 import { useDebounce } from "../lib/hooks";
 
 export function GameCatalog() {
@@ -21,6 +22,7 @@ export function GameCatalog() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkAddModal, setShowBulkAddModal] = useState(false);
+  const [showImportSteamModal, setShowImportSteamModal] = useState(false);
 
   const preferences = useQuery(api.games.getUserPreferences);
   const updateUserPreferences = useMutation(api.games.updateUserPreferences);
@@ -140,6 +142,12 @@ export function GameCatalog() {
           </div>
           <div className="flex gap-3">
             <button
+              onClick={() => setShowImportSteamModal(true)}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Add from Steam
+            </button>
+            <button
               onClick={() => setShowBulkAddModal(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
             >
@@ -245,6 +253,10 @@ export function GameCatalog() {
 
       {showBulkAddModal && (
         <BulkAddModal onClose={() => setShowBulkAddModal(false)} />
+      )}
+
+      {showImportSteamModal && (
+        <ImportSteamModal onClose={() => setShowImportSteamModal(false)} />
       )}
     </div>
   );

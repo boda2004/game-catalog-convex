@@ -46,8 +46,9 @@ export const addGameToUserInternal = internalMutation({
       )
       .unique();
 
+    // If the user already owns this game, return gracefully (idempotent)
     if (existingUserGame) {
-      throw new Error("Game already in your collection");
+      return gameId;
     }
 
     await ctx.db.insert("userGames", {
