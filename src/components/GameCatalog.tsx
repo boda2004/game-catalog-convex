@@ -119,32 +119,38 @@ export function GameCatalog() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <span>My Games ({totalCount})</span>
-            {isFetching && <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>}
-          </h2>
-          <p className="text-gray-600">
-            {totalCount === 0
-              ? "No games in your collection yet"
-              : `Showing ${games.length} of ${totalCount} games`
-            }
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => setShowBulkAddModal(true)}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-          >
-            Bulk Add Games
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-          >
-            Add Game
-          </button>
+      <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-900">My Games</h2>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {totalCount}
+              </span>
+              {isFetching && (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" aria-label="Loading"></div>
+              )}
+            </div>
+            <p className="text-gray-600 mt-1">
+              {totalCount === 0
+                ? "No games in your collection yet"
+                : `Showing ${games.length} of ${totalCount} games`}
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowBulkAddModal(true)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Bulk Add Games
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+            >
+              Add Game
+            </button>
+          </div>
         </div>
       </div>
 
@@ -153,6 +159,10 @@ export function GameCatalog() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onClearFilters={handleClearFilters}
+        selectedPlatforms={selectedPlatforms}
+        selectedGenres={selectedGenres}
+        onPlatformToggle={handlePlatformToggle}
+        onGenreToggle={handleGenreToggle}
       />
 
       {/* Controls moved into GameGrid and GameTable top blocks */}

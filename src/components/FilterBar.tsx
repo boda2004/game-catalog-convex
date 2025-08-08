@@ -4,21 +4,29 @@ interface FilterBarProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onClearFilters: () => void;
+  selectedPlatforms: string[];
+  selectedGenres: string[];
+  onPlatformToggle: (platform: string) => void;
+  onGenreToggle: (genre: string) => void;
 }
 
 const FilterBarInternal = ({
   searchTerm,
   onSearchChange,
   onClearFilters,
-  
+  selectedPlatforms,
+  selectedGenres,
+  onPlatformToggle,
+  onGenreToggle,
 }: FilterBarProps) => {
-  const hasActiveFilters = searchTerm.length > 0;
+  const hasActiveFilters =
+    searchTerm.length > 0 || selectedPlatforms.length > 0 || selectedGenres.length > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+    <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-5 space-y-3">
       {/* Search */}
       <div>
-        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1.5">
           Search Games
         </label>
         <div className="relative">
@@ -33,20 +41,64 @@ const FilterBarInternal = ({
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full pl-10 pr-9 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
+          {searchTerm.length > 0 && (
+            <button
+              type="button"
+              onClick={() => onSearchChange("")}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Clear Filters */}
+      {/* Active filters */}
       {hasActiveFilters && (
-        <div className="pt-2 border-t">
-          <button
-            onClick={onClearFilters}
-            className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-          >
-            Clear all filters
-          </button>
+        <div className="flex flex-col gap-2 pt-2 border-t">
+          <div className="flex flex-wrap items-center gap-2">
+            {searchTerm && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M8 4a4 4 0 100 8 4 4 0 000-8z" />
+                </svg>
+                {searchTerm}
+              </span>
+            )}
+            {selectedPlatforms.map((p) => (
+              <button
+                key={`p-${p}`}
+                onClick={() => onPlatformToggle(p)}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 hover:bg-blue-200"
+                title="Remove platform filter"
+              >
+                {p}
+                <span className="ml-0.5">✕</span>
+              </button>
+            ))}
+            {selectedGenres.map((g) => (
+              <button
+                key={`g-${g}`}
+                onClick={() => onGenreToggle(g)}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 hover:bg-purple-200"
+                title="Remove genre filter"
+              >
+                {g}
+                <span className="ml-0.5">✕</span>
+              </button>
+            ))}
+          </div>
+          <div>
+            <button
+              onClick={onClearFilters}
+              className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+            >
+              Clear all filters
+            </button>
+          </div>
         </div>
       )}
     </div>
