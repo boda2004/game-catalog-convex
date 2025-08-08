@@ -124,9 +124,6 @@ export function GameCatalog() {
           <div>
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-900">My Games</h2>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {totalCount}
-              </span>
               {isFetching && (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600" aria-label="Loading"></div>
               )}
@@ -134,7 +131,11 @@ export function GameCatalog() {
             <p className="text-gray-600 mt-1">
               {totalCount === 0
                 ? "No games in your collection yet"
-                : `Showing ${games.length} of ${totalCount} games`}
+                : (() => {
+                    const startIndex = (currentPage - 1) * itemsPerPage + 1;
+                    const endIndex = startIndex + games.length - 1;
+                    return `Showing ${startIndex}–${endIndex} of ${totalCount} games`;
+                  })()}
             </p>
           </div>
           <div className="flex gap-3">
