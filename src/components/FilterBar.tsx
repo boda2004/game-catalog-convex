@@ -20,7 +20,7 @@ const FilterBarInternal = ({
   onGenreToggle,
 }: FilterBarProps) => {
   const hasActiveFilters =
-    searchTerm.length > 0 || selectedPlatforms.length > 0 || selectedGenres.length > 0;
+    selectedPlatforms.length > 0 || selectedGenres.length > 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-5 space-y-3">
@@ -60,14 +60,6 @@ const FilterBarInternal = ({
       {hasActiveFilters && (
         <div className="flex flex-col gap-2 pt-2 border-t">
           <div className="flex flex-wrap items-center gap-2">
-            {searchTerm && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M8 4a4 4 0 100 8 4 4 0 000-8z" />
-                </svg>
-                {searchTerm}
-              </span>
-            )}
             {selectedPlatforms.map((p) => (
               <button
                 key={`p-${p}`}
