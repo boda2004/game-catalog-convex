@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Dropdown } from "./shared/Dropdown";
+import { ComboBox } from "./shared/ComboBox";
 
 interface Game {
   _id: Id<"games">;
@@ -320,15 +321,14 @@ export function GameTable({
           </div>
           <div className="flex items-center gap-2 mr-4">
             <span className="text-sm font-medium text-gray-700">Per page:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-              <option value={48}>48</option>
-            </select>
+            <div className="w-24">
+              <ComboBox
+                value={itemsPerPage}
+                onChange={(v) => onItemsPerPageChange(Number(v))}
+                options={[12, 24, 48].map((n) => ({ label: String(n), value: n }))}
+                align="left"
+              />
+            </div>
           </div>
         </div>
         {/* Right controls: Column visibility dropdown */}

@@ -2,6 +2,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { GameDetailModal } from "./GameDetailModal";
 import { useMemo, useState, useEffect, useRef } from "react";
 import { useQuery } from "convex/react";
+import { ComboBox } from "./shared/ComboBox";
 import { api } from "../../convex/_generated/api";
 
 interface Game {
@@ -143,15 +144,14 @@ export function GameGrid({
           </div>
           <div className="flex items-center gap-2 mr-4">
             <span className="text-sm font-medium text-gray-700">Per page:</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={12}>12</option>
-              <option value={24}>24</option>
-              <option value={48}>48</option>
-            </select>
+            <div className="w-24">
+              <ComboBox
+                value={itemsPerPage}
+                onChange={(v) => onItemsPerPageChange(Number(v))}
+                options={[12, 24, 48].map((n) => ({ label: String(n), value: n }))}
+                align="left"
+              />
+            </div>
           </div>
           {/* Sort controls */}
           <div className="flex items-center gap-2">
