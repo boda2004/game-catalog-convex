@@ -4,6 +4,9 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Important for GitHub Pages: lets us deploy under a subpath like "/repo-name/"
+  // You can override this at build time via the BASE_PATH environment variable.
+  base: process.env.BASE_PATH || "/",
   plugins: [
     react(),
     // The code below enables dev tools like taking screenshots of your site
