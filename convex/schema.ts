@@ -44,6 +44,23 @@ const applicationTables = {
     visibleFields: v.array(v.string()),
     itemsPerPage: v.number(),
   }).index("by_user", ["userId"]),
+
+  // Import job progress tracking for realtime UI updates
+  importJobs: defineTable({
+    userId: v.id("users"),
+    type: v.union(v.literal("bulk"), v.literal("steam")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("running"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    total: v.number(),
+    completed: v.number(),
+    error: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 };
 
 export default defineSchema({

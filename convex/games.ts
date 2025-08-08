@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 async function getLoggedInUser(ctx: any) {
@@ -290,6 +291,20 @@ export const getUserPreferences = query({
   },
 });
 
+// Realtime progress: fetch an import job by id for live UI subscription
+export const getImportJob = query({
+  args: { jobId: v.optional(v.id("importJobs")) },
+  handler: async (ctx, args) => {
+    if (!args.jobId) return null;
+    const user = await getLoggedInUser(ctx);
+    const job = await ctx.db.get(args.jobId);
+    if (!job || job.userId !== user._id) {
+      return null;
+    }
+    return job;
+  },
+});
+
 export const updateUserPreferences = mutation({
   args: {
     viewMode: v.optional(v.union(v.literal("grid"), v.literal("table"))),
@@ -396,5 +411,81 @@ export const debugUserGames = query({
       gameIds,
       userGameNames: games.filter(g => g !== null).map(g => g!.name),
     };
+  },
+});
+
+// Create an import job for progress tracking
+export const createImportJob = mutation({
+  args: {
+    type: v.union(v.literal("bulk"), v.literal("steam")),
+    total: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getLoggedInUser(ctx);
+    const now = Date.now();
+    const jobId = await ctx.db.insert("importJobs", {
+      userId: user._id,
+      type: args.type,
+      status: "running",
+      total: args.total,
+      completed: 0,
+      createdAt: now,
+      updatedAt: now,
+    });
+    return jobId;
+  },
+});
+
+// Internal helpers for actions to update progress
+export const updateImportJob = internalMutation({
+  args: {
+    jobId: v.id("importJobs"),
+    completed: v.optional(v.number()),
+    total: v.optional(v.number()),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("running"),
+        v.literal("completed"),
+        v.literal("failed"),
+      ),
+    ),
+    error: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job) return;
+    await ctx.db.patch(args.jobId, {
+      ...(args.completed !== undefined ? { completed: args.completed } : {}),
+      ...(args.total !== undefined ? { total: args.total } : {}),
+      ...(args.status ? { status: args.status } : {}),
+      ...(args.error ? { error: args.error } : {}),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const completeImportJob = internalMutation({
+  args: { jobId: v.id("importJobs") },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job) return;
+    await ctx.db.patch(args.jobId, {
+      status: "completed",
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const failImportJob = internalMutation({
+  args: { jobId: v.id("importJobs"), error: v.string() },
+  handler: async (ctx, args) => {
+    const job = await ctx.db.get(args.jobId);
+    if (!job) return;
+    await ctx.db.patch(args.jobId, {
+      status: "failed",
+      error: args.error,
+      updatedAt: Date.now(),
+    });
   },
 });

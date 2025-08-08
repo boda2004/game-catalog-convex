@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAction } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 type ImportResult = {
@@ -21,17 +21,26 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
   const [limit, setLimit] = useState<number | "">(50);
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[]>([]);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const importOwnedGames = useAction(api.steam.importOwnedGames);
+  const createImportJob = useMutation(api.games.createImportJob);
+  const job = useQuery(api.games.getImportJob, jobId ? ({ jobId } as any) : undefined);
+  const total = job?.total ?? 0;
+  const completed = job?.completed ?? 0;
+  const isRunning = job?.status === "running";
 
   const handleImport = async () => {
     if (!steamIdOrUrl.trim()) return;
     setIsImporting(true);
     try {
+      const createdJobId = await createImportJob({ type: "steam", total: typeof limit === "number" ? limit : 0 });
+      setJobId(createdJobId as any);
       const res: ImportResult[] = await importOwnedGames({
         steamIdOrProfileUrl: steamIdOrUrl.trim(),
         minPlaytimeMinutes: typeof minPlaytime === "number" ? minPlaytime : undefined,
         limit: typeof limit === "number" ? limit : undefined,
+        jobId: createdJobId as any,
       });
       setResults(res);
       onImported?.(res);
@@ -119,7 +128,7 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
               disabled={isImporting || !steamIdOrUrl.trim()}
               className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isImporting ? "Importing..." : "Import"}
+              {isImporting && isRunning && total > 0 ? `${completed} of ${total}` : isImporting ? "Importing..." : "Import"}
             </button>
             <button onClick={onClose} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
               Close

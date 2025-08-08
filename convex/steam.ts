@@ -1,6 +1,7 @@
 import { action } from "./_generated/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
 type SteamOwnedGame = {
@@ -50,6 +51,7 @@ export const importOwnedGames = action({
     steamIdOrProfileUrl: v.string(),
     minPlaytimeMinutes: v.optional(v.number()),
     limit: v.optional(v.number()),
+    jobId: v.optional(v.id("importJobs")),
   },
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
@@ -96,6 +98,23 @@ export const importOwnedGames = action({
 
     const results: Array<{ name: string; success: boolean; addedName?: string; error?: string; alreadyOwned?: boolean }> = [];
 
+    // Use provided job id if present, otherwise create a new one
+    let jobId: Id<"importJobs">;
+    if (!args.jobId) {
+      jobId = await ctx.runMutation(api.games.createImportJob, {
+        type: "steam",
+        total: gameNames.length,
+      });
+    } else {
+      jobId = args.jobId;
+      await ctx.runMutation(internal.games.updateImportJob, {
+        jobId,
+        total: gameNames.length,
+        status: "running",
+      });
+    }
+
+    let completed = 0;
     for (const gameName of gameNames) {
       try {
         // RAWG search
@@ -148,8 +167,11 @@ export const importOwnedGames = action({
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         results.push({ name: gameName, success: false, error: errorMessage });
       }
+      completed += 1;
+      await ctx.runMutation(internal.games.updateImportJob, { jobId, completed });
     }
 
+    await ctx.runMutation(internal.games.completeImportJob, { jobId });
     return results;
   },
 });

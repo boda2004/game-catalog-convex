@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useAction } from "convex/react";
+import { useEffect, useMemo, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 interface BulkAddResult {
@@ -18,8 +18,15 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
   const [gameNames, setGameNames] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [results, setResults] = useState<BulkAddResult[]>([]);
+  const [jobId, setJobId] = useState<string | null>(null);
 
   const addGamesByNames = useAction(api.rawg.addGamesByNames);
+  const createImportJob = useMutation(api.games.createImportJob);
+  const job = useQuery(api.games.getImportJob, jobId ? ({ jobId } as any) : undefined);
+
+  const total = job?.total ?? 0;
+  const completed = job?.completed ?? 0;
+  const isRunning = job?.status === "running";
 
   const handleBulkAdd = async () => {
     const names = gameNames
@@ -31,7 +38,10 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
 
     setIsAdding(true);
     try {
-      const addResults = await addGamesByNames({ gameNames: names });
+      // Create job then call action with jobId
+      const createdJobId = await createImportJob({ type: "bulk", total: names.length });
+      setJobId(createdJobId as any);
+      const addResults = await addGamesByNames({ gameNames: names, jobId: createdJobId as any });
 
       // Transform results to match expected format
       const transformedResults: BulkAddResult[] = addResults.map((result: any) => {
@@ -135,7 +145,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
               disabled={isAdding || !gameNames.trim()}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isAdding ? "Adding Games..." : "Add Games"}
+              {isAdding && isRunning && total > 0 ? `${completed} of ${total}` : isAdding ? "Adding..." : "Add Games"}
             </button>
             <button
               onClick={onClose}

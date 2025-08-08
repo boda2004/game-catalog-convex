@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { internal } from "./_generated/api";
+import { internal, api } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 
@@ -80,7 +80,7 @@ export const addGame = action({
 });
 
 export const addGamesByNames = action({
-  args: { gameNames: v.array(v.string()) },
+  args: { gameNames: v.array(v.string()), jobId: v.optional(v.id("importJobs")) },
   returns: v.array(
     v.object({
       name: v.string(),
@@ -113,7 +113,31 @@ export const addGamesByNames = action({
       throw new Error("User not authenticated");
     }
 
-    const results = [];
+    const results: Array<{
+      name: string;
+      success: boolean;
+      addedName?: string;
+      error?: string;
+      alreadyOwned?: boolean;
+    }> = [];
+
+    // Use provided job if available, else create one
+    let jobId: Id<"importJobs">;
+    if (!args.jobId) {
+      jobId = await ctx.runMutation(api.games.createImportJob, {
+        type: "bulk",
+        total: args.gameNames.length,
+      });
+    } else {
+      jobId = args.jobId;
+      await ctx.runMutation(internal.games.updateImportJob, {
+        jobId,
+        total: args.gameNames.length,
+        status: "running",
+      });
+    }
+
+    let completed = 0;
 
     for (const gameName of args.gameNames) {
       try {
@@ -185,8 +209,11 @@ export const addGamesByNames = action({
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         results.push({ name: gameName, success: false, error: errorMessage });
       }
+      completed += 1;
+      await ctx.runMutation(internal.games.updateImportJob, { jobId, completed });
     }
 
+    await ctx.runMutation(internal.games.completeImportJob, { jobId });
     return results;
   },
 });
