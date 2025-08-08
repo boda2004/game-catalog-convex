@@ -30,6 +30,10 @@ interface GameTableProps {
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
   onToggleFieldVisibility: (field: string) => void;
+  itemsPerPage: number;
+  onItemsPerPageChange: (count: number) => void;
+  onViewModeChange: (mode: "grid" | "table") => void;
+  viewMode: "grid" | "table";
 }
 
 export function GameTable({ 
@@ -43,6 +47,10 @@ export function GameTable({
   sortOrder,
   onSortChange,
   onToggleFieldVisibility,
+  itemsPerPage,
+  onItemsPerPageChange,
+  onViewModeChange,
+  viewMode,
 }: GameTableProps) {
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -286,8 +294,44 @@ export function GameTable({
 
   return (
     <>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-        {/* Column visibility dropdown (moved from ViewControls into table top block) */}
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        {/* Left controls: View & Per page */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-sm font-medium text-gray-700">View:</span>
+            <div className="flex rounded-md border border-gray-300">
+              <button
+                onClick={() => onViewModeChange("grid")}
+                className={`px-3 py-1 text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
+                }`}
+              >
+                Grid
+              </button>
+              <button
+                onClick={() => onViewModeChange("table")}
+                className={`px-3 py-1 text-sm rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  viewMode === "table" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
+                }`}
+              >
+                Table
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mr-4">
+            <span className="text-sm font-medium text-gray-700">Per page:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+              <option value={48}>48</option>
+            </select>
+          </div>
+        </div>
+        {/* Right controls: Column visibility dropdown */}
         <div className="relative">
           <Dropdown
             label="Columns"

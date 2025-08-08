@@ -4,62 +4,18 @@ interface FilterBarProps {
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onClearFilters: () => void;
-  viewMode: "grid" | "table";
-  onViewModeChange: (mode: "grid" | "table") => void;
-  itemsPerPage: number;
-  onItemsPerPageChange: (count: number) => void;
 }
 
 const FilterBarInternal = ({
   searchTerm,
   onSearchChange,
   onClearFilters,
-  viewMode,
-  onViewModeChange,
-  itemsPerPage,
-  onItemsPerPageChange,
+  
 }: FilterBarProps) => {
   const hasActiveFilters = searchTerm.length > 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
-      {/* View & Per-page Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">View:</span>
-          <div className="flex rounded-md border border-gray-300">
-            <button
-              onClick={() => onViewModeChange("grid")}
-              className={`px-3 py-1 text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
-              }`}
-            >
-              Grid
-            </button>
-            <button
-              onClick={() => onViewModeChange("table")}
-              className={`px-3 py-1 text-sm rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                viewMode === "table" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
-              }`}
-            >
-              Table
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Per page:</span>
-          <select
-            value={itemsPerPage}
-            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value={12}>12</option>
-            <option value={24}>24</option>
-            <option value={48}>48</option>
-          </select>
-        </div>
-      </div>
-
       {/* Search */}
       <div>
         <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">

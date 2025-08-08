@@ -153,10 +153,6 @@ export function GameCatalog() {
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onClearFilters={handleClearFilters}
-        viewMode={preferences.viewMode}
-        onViewModeChange={handleViewModeChange}
-        itemsPerPage={preferences.itemsPerPage}
-        onItemsPerPageChange={handleItemsPerPageChange}
       />
 
       {/* Controls moved into GameGrid and GameTable top blocks */}
@@ -195,6 +191,10 @@ export function GameCatalog() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
+            itemsPerPage={preferences.itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            onViewModeChange={handleViewModeChange}
+            viewMode={preferences.viewMode}
           />
         ) : (
           <GameTable
@@ -208,6 +208,10 @@ export function GameCatalog() {
             onToggleFieldVisibility={handleToggleFieldVisibility}
             onPlatformToggle={handlePlatformToggle}
             onGenreToggle={handleGenreToggle}
+            itemsPerPage={preferences.itemsPerPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+            onViewModeChange={handleViewModeChange}
+            viewMode={preferences.viewMode}
           />
         )}
       </div>
