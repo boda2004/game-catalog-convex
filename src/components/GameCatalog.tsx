@@ -196,6 +196,9 @@ export function GameCatalog() {
             selectedGenres={selectedGenres}
             onPlatformToggle={handlePlatformToggle}
             onGenreToggle={handleGenreToggle}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={handleSortChange}
           />
         ) : (
           <GameTable

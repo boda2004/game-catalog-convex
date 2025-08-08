@@ -22,6 +22,9 @@ interface GameGridProps {
   selectedGenres: string[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+  onSortChange: (field: string, order: "asc" | "desc") => void;
 }
 
 export function GameGrid({ 
@@ -29,7 +32,10 @@ export function GameGrid({
   selectedPlatforms, 
   selectedGenres, 
   onPlatformToggle, 
-  onGenreToggle 
+  onGenreToggle,
+  sortBy,
+  sortOrder,
+  onSortChange,
 }: GameGridProps) {
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
 
@@ -91,9 +97,26 @@ export function GameGrid({
   return (
     <>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        {/* Sort control */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Placeholder for parent-provided sort; keeping spacing consistent */}
+        {/* Sort controls (left-aligned) */}
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-700">Sort by:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value, sortOrder)}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="userAddedAt">Date Added</option>
+            <option value="name">Name</option>
+            <option value="rating">Rating</option>
+            <option value="metacritic">Metacritic</option>
+            <option value="released">Release Date</option>
+          </select>
+          <button
+            onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
+            className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {sortOrder === "asc" ? "↑" : "↓"}
+          </button>
         </div>
         {/* Platforms and Genres controls */}
         <div className="flex flex-wrap items-center gap-3">
