@@ -13,6 +13,7 @@ export interface DropdownProps {
   placeholder?: string;
   align?: "left" | "right";
   showSearch?: boolean;
+  buttonClassName?: string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -27,7 +28,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
   selected,
   placeholder = "Search...",
   align = "left",
-  showSearch = true
+  showSearch = true,
+  buttonClassName = "",
 }) => {
   const panelAlignClass = align === "right" ? "right-0" : "left-0";
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -53,20 +55,20 @@ export const Dropdown: React.FC<DropdownProps> = ({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full px-2 py-1 text-xs border border-gray-300 rounded flex items-center justify-between bg-white"
+        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white ${buttonClassName}`}
       >
         <span>{count ? `${label} (${count})` : label}</span>
         <span className="ml-1.5 text-[10px] text-gray-500">{isOpen ? "▲" : "▼"}</span>
       </button>
       {isOpen && (
         <div className={`absolute ${panelAlignClass} mt-1 w-56 bg-white border border-gray-200 rounded shadow z-20`}>
-          <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+          <div className="p-2 border-b border-gray-100 flex gap-2 items-center text-sm">
             {showSearch && (
               <input
                 value={query}
                 onChange={(e) => setQuery && setQuery(e.target.value)}
                 placeholder={placeholder}
-                className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
               />
             )}
             <button
@@ -75,14 +77,14 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 selected.forEach((v) => onToggle(v));
                 setQuery && setQuery("");
               }}
-              className="text-[10px] px-2 py-1 border rounded hover:bg-gray-50"
+              className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
             >
               Clear
             </button>
           </div>
-          <div className="max-h-48 overflow-auto">
+          <div className="max-h-48 overflow-auto text-sm">
             {items.length === 0 && (
-              <div className="px-2 py-2 text-[11px] text-gray-500">No results</div>
+              <div className="px-2 py-2 text-xs text-gray-500">No results</div>
             )}
             {items.map((v) => (
               <button
@@ -92,7 +94,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                   e.stopPropagation();
                   onToggle(v);
                 }}
-                className={`w-full text-left px-2 py-1 text-xs hover:bg-gray-100 ${
+                className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${
                   selected.includes(v) ? "bg-blue-50 text-blue-700" : ""
                 }`}
               >

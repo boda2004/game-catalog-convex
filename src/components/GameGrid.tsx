@@ -149,6 +149,7 @@ export function GameGrid({
                 value={itemsPerPage}
                 onChange={(v) => onItemsPerPageChange(Number(v))}
                 options={[12, 24, 48].map((n) => ({ label: String(n), value: n }))}
+                buttonClassName="text-sm"
                 align="left"
               />
             </div>

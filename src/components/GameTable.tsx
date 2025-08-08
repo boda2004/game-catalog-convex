@@ -326,6 +326,7 @@ export function GameTable({
                 value={itemsPerPage}
                 onChange={(v) => onItemsPerPageChange(Number(v))}
                 options={[12, 24, 48].map((n) => ({ label: String(n), value: n }))}
+                buttonClassName="text-sm"
                 align="left"
               />
             </div>
@@ -354,6 +355,7 @@ export function GameTable({
             placeholder="Search columns..."
             align="right"
             showSearch={true}
+            buttonClassName="text-sm"
           />
         </div>
       </div>
@@ -370,9 +372,9 @@ export function GameTable({
                     <th
                       key={field}
                       scope="col"
-                      className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${
-                        isSortable ? "cursor-pointer hover:bg-gray-100" : ""
-                      }`}
+                      className={`px-6 py-3 text-left text-xs font-medium text-gray-500 ${
+                        isFilterableCombo ? "normal-case tracking-normal" : "uppercase tracking-wider"
+                      } ${isSortable ? "cursor-pointer hover:bg-gray-100" : ""}`}
                       onClick={() => isSortable && handleHeaderClick(field)}
                     >
                       <div className="flex items-center">
@@ -386,7 +388,7 @@ export function GameTable({
                         )}
                       </div>
                       {isFilterableCombo && (
-                        <div className="flex items-center h-5">
+                        <div className="flex items-center normal-case tracking-normal">
                           {field === 'platforms' ? (
                             <Dropdown
                               label="Platforms"
