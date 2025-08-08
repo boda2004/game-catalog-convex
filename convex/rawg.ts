@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import type { Id } from "./_generated/dataModel";
 
 // RAWG API integration actions
 export const searchGamesPublic = action({
@@ -80,7 +81,27 @@ export const addGame = action({
 
 export const addGamesByNames = action({
   args: { gameNames: v.array(v.string()) },
-  handler: async (ctx, args) => {
+  returns: v.array(
+    v.object({
+      name: v.string(),
+      success: v.boolean(),
+      addedName: v.optional(v.string()),
+      error: v.optional(v.string()),
+      alreadyOwned: v.optional(v.boolean()),
+    }),
+  ),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<
+    Array<{
+      name: string;
+      success: boolean;
+      addedName?: string;
+      error?: string;
+      alreadyOwned?: boolean;
+    }>
+  > => {
     const apiKey = process.env.RAWG_API_KEY;
     if (!apiKey) {
       throw new Error("RAWG API key not configured");
@@ -146,11 +167,19 @@ export const addGamesByNames = action({
           tags: gameData.tags?.map((t: any) => t.name) || [],
         };
 
-        await ctx.runMutation(internal.gamesInternal.addGameToUserInternal, {
+        const outcome: { gameId: Id<"games">; alreadyOwned: boolean } = await ctx.runMutation(
+          internal.gamesInternal.addGameToUserInternal,
+          {
           ...gameInfo,
           userId,
+          },
+        );
+        results.push({
+          name: gameName,
+          success: true,
+          addedName: gameData.name,
+          alreadyOwned: Boolean(outcome?.alreadyOwned),
         });
-        results.push({ name: gameName, success: true, addedName: gameData.name });
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";

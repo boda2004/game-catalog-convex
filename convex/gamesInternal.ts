@@ -48,7 +48,7 @@ export const addGameToUserInternal = internalMutation({
 
     // If the user already owns this game, return gracefully (idempotent)
     if (existingUserGame) {
-      return gameId;
+      return { gameId, alreadyOwned: true } as const;
     }
 
     await ctx.db.insert("userGames", {
@@ -57,6 +57,6 @@ export const addGameToUserInternal = internalMutation({
       addedAt: Date.now(),
     });
 
-    return gameId;
+    return { gameId, alreadyOwned: false } as const;
   },
 });

@@ -7,6 +7,7 @@ type ImportResult = {
   success: boolean;
   addedName?: string;
   error?: string;
+  alreadyOwned?: boolean;
 };
 
 interface ImportSteamModalProps {
@@ -41,7 +42,11 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
     }
   };
 
-  const getStatusColor = (success: boolean) => (success ? "text-green-600" : "text-red-600");
+  const getStatusColor = (result: ImportResult) => {
+    if (!result.success) return "text-red-600";
+    if (result.alreadyOwned) return "text-yellow-600";
+    return "text-green-600";
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -98,8 +103,8 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
                 {results.map((r, i) => (
                   <div key={i} className="flex justify-between items-center text-sm">
                     <span className="font-medium">{r.name}</span>
-                    <span className={getStatusColor(r.success)}>
-                      {r.success ? "Added" : r.error || "Error"}
+                    <span className={getStatusColor(r)}>
+                      {r.success ? (r.alreadyOwned ? "Already in your collection" : "Added") : r.error || "Error"}
                       {r.addedName && r.addedName !== r.name && ` (${r.addedName})`}
                     </span>
                   </div>

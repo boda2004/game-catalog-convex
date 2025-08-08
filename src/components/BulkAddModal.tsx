@@ -32,14 +32,23 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
     setIsAdding(true);
     try {
       const addResults = await addGamesByNames({ gameNames: names });
-      
+
       // Transform results to match expected format
-      const transformedResults: BulkAddResult[] = addResults.map((result: any) => ({
-        name: result.name,
-        status: result.success ? "added" : "error" as const,
-        game: result.addedName,
-        error: result.error,
-      }));
+      const transformedResults: BulkAddResult[] = addResults.map((result: any) => {
+        if (!result.success) {
+          return {
+            name: result.name,
+            status: result.error === "Game not found" ? "not_found" : "error",
+            game: result.addedName,
+            error: result.error,
+          } as const;
+        }
+        return {
+          name: result.name,
+          status: result.alreadyOwned ? "already_exists" : "added",
+          game: result.addedName,
+        } as const;
+      });
       
       setResults(transformedResults);
       onGamesAdded?.(transformedResults);
@@ -63,7 +72,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case "added": return "Added";
-      case "already_exists": return "Already exists";
+      case "already_exists": return "Already in your collection";
       case "not_found": return "Not found";
       case "error": return "Error";
       default: return status;

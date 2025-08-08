@@ -94,7 +94,7 @@ export const importOwnedGames = action({
       }
     }
 
-    const results: Array<{ name: string; success: boolean; addedName?: string; error?: string }> = [];
+    const results: Array<{ name: string; success: boolean; addedName?: string; error?: string; alreadyOwned?: boolean }> = [];
 
     for (const gameName of gameNames) {
       try {
@@ -139,11 +139,11 @@ export const importOwnedGames = action({
           tags: (gameData.tags?.map((t: any) => t.name) as Array<string>) || [],
         };
 
-        await ctx.runMutation(internal.gamesInternal.addGameToUserInternal, {
+        const outcome = await ctx.runMutation(internal.gamesInternal.addGameToUserInternal, {
           ...gameInfo,
           userId,
         });
-        results.push({ name: gameName, success: true, addedName: gameData.name });
+        results.push({ name: gameName, success: true, addedName: gameData.name, alreadyOwned: Boolean(outcome?.alreadyOwned) });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
         results.push({ name: gameName, success: false, error: errorMessage });
