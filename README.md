@@ -29,3 +29,4 @@ Check out the [Convex docs](https://docs.convex.dev/) for more information on ho
 User-defined http routes are defined in the `convex/router.ts` file. We split these routes into a separate file from `convex/http.ts` to allow us to prevent the LLM from modifying the authentication routes.
 
 <!-- chore: trigger ci -->
+<!-- docs: test CI and release automation -->
