@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/boda2004/game-catalog-convex/compare/v1.1.0...v1.1.1) (2025-08-09)
+
+
+### Bug Fixes
+
+* trigger release-please (test) ([#4](https://github.com/boda2004/game-catalog-convex/issues/4)) ([d52cc7f](https://github.com/boda2004/game-catalog-convex/commit/d52cc7f44555888c1dee113181eec8237a8f0e26))
+
 ## [1.1.0](https://github.com/boda2004/game-catalog-convex/compare/v1.0.0...v1.1.0) (2025-08-09)
 
 
