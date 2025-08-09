@@ -1,20 +1,17 @@
-name: Release (Automated)
+name: Release Please
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch: {}
+    branches: [main]
+  workflow_dispatch:
 
-# Avoid overlapping release runs for the same ref
-concurrency:
-  group: release-please-${{ github.ref }}
-  cancel-in-progress: false
-
-# Release Please needs permissions to open PRs and create releases
 permissions:
   contents: write
   pull-requests: write
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
 
 jobs:
   release:
@@ -23,25 +20,19 @@ jobs:
       - name: Release Please
         uses: google-github-actions/release-please-action@v4
         with:
-          # For a single NodeJS package in the repo
           release-type: node
-          package-name: flex-template
-          # Treat feature commits as minor bumps until v1.0.0
+          package-name: game-catalog-project
           bump-minor-pre-major: true
-          # Customize changelog sections following Conventional Commits
           changelog-types: |
             [
-              {"type": "feat",     "section": "Features",        "hidden": false},
-              {"type": "fix",      "section": "Bug Fixes",       "hidden": false},
-              {"type": "perf",     "section": "Performance",     "hidden": false},
-              {"type": "revert",   "section": "Reverts",         "hidden": false},
-              {"type": "docs",     "section": "Documentation",   "hidden": false},
-              {"type": "style",    "section": "Styles",          "hidden": false},
-              {"type": "refactor", "section": "Refactoring",     "hidden": false},
-              {"type": "test",     "section": "Tests",           "hidden": false},
-              {"type": "build",    "section": "Build System",    "hidden": false},
-              {"type": "ci",       "section": "CI",              "hidden": false},
-              {"type": "chore",    "section": "Chores",          "hidden": true}
+              {"type": "feat", "section": "Features", "hidden": false},
+              {"type": "fix", "section": "Bug Fixes", "hidden": false},
+              {"type": "perf", "section": "Performance", "hidden": false},
+              {"type": "refactor", "section": "Refactoring", "hidden": false},
+              {"type": "docs", "section": "Documentation", "hidden": false},
+              {"type": "chore", "section": "Chores", "hidden": true},
+              {"type": "build", "section": "Build System", "hidden": true},
+              {"type": "test", "section": "Tests", "hidden": true}
             ]
 
 

@@ -1,37 +1,31 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+  push:
     branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  lint_and_build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --no-fund --no-audit
 
-      - name: Type check (root)
-        run: npx tsc -p . -noEmit --pretty false
-
-      - name: Type check (convex)
-        run: npx tsc -p convex -noEmit --pretty false
-
-      - name: Build
-        run: npm run build
+      - name: Typecheck and build
+        run: npm run lint
 
 

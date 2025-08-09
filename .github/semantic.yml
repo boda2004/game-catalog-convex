@@ -1,25 +1,12 @@
-# Configuration for the Semantic Pull Requests GitHub App
-# https://github.com/semantic-release/semantic-release and https://github.com/zeke/semantic-pull-requests
-
-# Validate only the PR title (not commits)
 titleOnly: true
-
-# Allow common Conventional Commit types, including chore for maintenance
 types:
   - feat
   - fix
-  - chore
   - perf
-  - docs
-  - style
   - refactor
-  - test
+  - docs
+  - chore
   - build
-  - ci
-  - revert
-
-# Accept any scope
-scopes:
-  - '*'
+  - test
 
 
