@@ -1,7 +1,7 @@
 # Game Catalog Project
   
 This is a project built with [Chef](https://chef.convex.dev) using [Convex](https://convex.dev) as its backend.
- You can find docs about Chef with useful information like how to deploy to production [here](https://docs.convex.dev/chef).
+You can find docs about Chef with useful information like how to deploy to production [here](https://docs.convex.dev/chef).
   
 This project is connected to the Convex deployment named [`woozy-iguana-894`](https://dashboard.convex.dev/d/woozy-iguana-894).
   
@@ -15,7 +15,7 @@ The backend code is in the `convex` directory.
 
 ## App authentication
 
-Chef apps use [Convex Auth](https://auth.convex.dev/) with Anonymous auth for easy sign in. You may wish to change this before deploying your app.
+Chef apps use [Convex Auth](https://auth.convex.dev/) with Anonymous auth for easy sign-in. You may wish to change this before deploying your app.
 
 ## Developing and deploying your app
 
