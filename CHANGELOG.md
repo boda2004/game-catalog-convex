@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/boda2004/game-catalog-convex/compare/v1.1.1...v1.2.0) (2025-08-09)
+
+
+### Features
+
+* **readme:** add Release Please demo section ([#7](https://github.com/boda2004/game-catalog-convex/issues/7)) ([58b346b](https://github.com/boda2004/game-catalog-convex/commit/58b346bef2d4531b7ffaefbcd3212e6cb434c3db))
+
+
+### Bug Fixes
+
+* **readme:** correct spacing and hyphenation ([#8](https://github.com/boda2004/game-catalog-convex/issues/8)) ([50d35da](https://github.com/boda2004/game-catalog-convex/commit/50d35da365c629fdfea640f1fce89694ee6f0fa7))
+
 ## [1.1.1](https://github.com/boda2004/game-catalog-convex/compare/v1.1.0...v1.1.1) (2025-08-09)
 
 
