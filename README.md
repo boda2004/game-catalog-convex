@@ -7,7 +7,7 @@ This project is connected to the Convex deployment named [`woozy-iguana-894`](ht
   
 ## Project structure
   
-The frontend code is in the `app` directory and is built with [Vite](https://vitejs.dev/).
+The frontend code is in the `src` directory and is built with [Vite](https://vitejs.dev/).
   
 The backend code is in the `convex` directory.
   
@@ -22,12 +22,10 @@ Chef apps use [Convex Auth](https://auth.convex.dev/) with Anonymous auth for ea
 Check out the [Convex docs](https://docs.convex.dev/) for more information on how to develop with Convex.
 * If you're new to Convex, the [Overview](https://docs.convex.dev/understanding/) is a good place to start
 * Check out the [Hosting and Deployment](https://docs.convex.dev/production/) docs for how to deploy your app
-* Read the [Best Practices](https://docs.convex.dev/understanding/best-practices/) guide for tips on how to improve you app further
+* Read the [Best Practices](https://docs.convex.dev/understanding/best-practices/) guide for tips on how to improve your app further
 
 ## HTTP API
 
 User-defined http routes are defined in the `convex/router.ts` file. We split these routes into a separate file from `convex/http.ts` to allow us to prevent the LLM from modifying the authentication routes.
 
-<!-- chore: trigger ci -->
-<!-- docs: test CI and release automation -->
-<!-- fix: trigger release-please (test) -->
+
