@@ -1,0 +1,22 @@
+name: Validate PR Title (Conventional Commits)
+
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title format
+        uses: aslafy-z/conventional-pr-title-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          preset: conventional-changelog-conventionalcommits
+          errorOnFail: true
+
+
