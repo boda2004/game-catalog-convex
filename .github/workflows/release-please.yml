@@ -26,7 +26,7 @@ jobs:
           # For a single NodeJS package in the repo
           release-type: node
           package-name: flex-template
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           # Treat feature commits as minor bumps until v1.0.0
           bump-minor-pre-major: true
           # Customize changelog sections following Conventional Commits
