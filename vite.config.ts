@@ -1,12 +1,20 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import fs from "fs";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
   // Important for GitHub Pages: lets us deploy under a subpath like "/repo-name/"
   // You can override this at build time via the BASE_PATH environment variable.
   base: process.env.BASE_PATH || "/",
+  define: {
+    __APP_VERSION__: JSON.stringify(
+      JSON.parse(
+        fs.readFileSync(path.resolve(__dirname, "./package.json"), "utf-8")
+      ).version,
+    ),
+  },
   plugins: [
     react(),
     // The code below enables dev tools like taking screenshots of your site
