@@ -24,7 +24,7 @@ export const addGameToUserInternal = internalMutation({
     ownedOnEpic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const { userId, ...gameData } = args;
+    const { userId, ownedOnSteam, ownedOnEpic, ...gameData } = args;
 
     let existingGame = await ctx.db
       .query("games")
@@ -50,8 +50,8 @@ export const addGameToUserInternal = internalMutation({
 
     // If the user already owns this game, update store ownership
     if (existingUserGame) {
-      const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || args.ownedOnSteam || false;
-      const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || args.ownedOnEpic || false;
+      const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || ownedOnSteam || false;
+      const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || ownedOnEpic || false;
       
       await ctx.db.patch(existingUserGame._id, {
         ownedOnSteam: updatedOwnedOnSteam,
@@ -65,8 +65,8 @@ export const addGameToUserInternal = internalMutation({
       userId,
       gameId,
       addedAt: Date.now(),
-      ownedOnSteam: args.ownedOnSteam || false,
-      ownedOnEpic: args.ownedOnEpic || false,
+      ownedOnSteam: ownedOnSteam || false,
+      ownedOnEpic: ownedOnEpic || false,
     });
 
     return { gameId, alreadyOwned: false } as const;
