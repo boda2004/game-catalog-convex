@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/boda2004/game-catalog-convex/compare/v1.3.0...v1.4.0) (2025-08-16)
+
+
+### Features
+
+* **games:** add store ownership management and filtering ([93513a3](https://github.com/boda2004/game-catalog-convex/commit/93513a33a634fd62376e919d4acaecde447cb8cb))
+
+
+### Bug Fixes
+
+* **games:** refactor ownership handling in addGameToUserInternal ([9485b46](https://github.com/boda2004/game-catalog-convex/commit/9485b46c0302b500f9c722fe53911596a069a572))
+
 ## [1.3.0](https://github.com/boda2004/game-catalog-convex/compare/v1.2.0...v1.3.0) (2025-08-09)
 
 
