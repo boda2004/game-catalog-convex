@@ -33,6 +33,9 @@ const applicationTables = {
     userId: v.id("users"),
     gameId: v.id("games"),
     addedAt: v.number(),
+    // Store ownership flags
+    ownedOnSteam: v.optional(v.boolean()),
+    ownedOnEpic: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
     .index("by_game", ["gameId"])

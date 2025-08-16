@@ -20,6 +20,7 @@ export const getUserGames = query({
     searchTerm: v.optional(v.string()),
     platforms: v.optional(v.array(v.string())),
     genres: v.optional(v.array(v.string())),
+    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic")))),
     sortBy: v.optional(v.string()),
     sortOrder: v.optional(v.string()),
     page: v.optional(v.number()),
@@ -48,7 +49,12 @@ export const getUserGames = query({
       gameIds.map(async (gameId) => {
         const game = await ctx.db.get(gameId);
         const userGameRel = userGameRelations.find(rel => rel.gameId === gameId);
-        return game ? { ...game, userAddedAt: userGameRel?.addedAt } : null;
+        return game ? { 
+          ...game, 
+          userAddedAt: userGameRel?.addedAt,
+          ownedOnSteam: userGameRel?.ownedOnSteam || false,
+          ownedOnEpic: userGameRel?.ownedOnEpic || false,
+        } : null;
       })
     );
 
@@ -84,6 +90,15 @@ export const getUserGames = query({
           )
         )
       );
+    }
+
+    // Apply store filter
+    if (args.stores && args.stores.length > 0) {
+      games = games.filter(game => {
+        if (args.stores!.includes("steam") && game.ownedOnSteam) return true;
+        if (args.stores!.includes("epic") && game.ownedOnEpic) return true;
+        return false;
+      });
     }
 
     // Apply sorting
@@ -186,6 +201,8 @@ export const getGameById = query({
       ...game,
       isOwned: !!userGameRel,
       userAddedAt: userGameRel?.addedAt,
+      ownedOnSteam: userGameRel?.ownedOnSteam || false,
+      ownedOnEpic: userGameRel?.ownedOnEpic || false,
     };
   },
 });
@@ -208,6 +225,8 @@ export const addGameToUser = mutation({
     description: v.optional(v.string()),
     website: v.optional(v.string()),
     tags: v.array(v.string()),
+    ownedOnSteam: v.optional(v.boolean()),
+    ownedOnEpic: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getLoggedInUser(ctx);
@@ -237,16 +256,26 @@ export const addGameToUser = mutation({
       )
       .unique();
 
-    // If already in user's collection, return gracefully (idempotent)
     if (existingUserGame) {
+      // Update existing ownership with new store flags
+      const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || args.ownedOnSteam || false;
+      const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || args.ownedOnEpic || false;
+      
+      await ctx.db.patch(existingUserGame._id, {
+        ownedOnSteam: updatedOwnedOnSteam,
+        ownedOnEpic: updatedOwnedOnEpic,
+      });
+      
       return gameId;
     }
 
-    // Add game to user's collection
+    // Add game to user's collection with store ownership
     await ctx.db.insert("userGames", {
       userId: user._id,
       gameId,
       addedAt: Date.now(),
+      ownedOnSteam: args.ownedOnSteam || false,
+      ownedOnEpic: args.ownedOnEpic || false,
     });
 
     return gameId;
@@ -387,6 +416,27 @@ export const getAllGenres = query({
     });
 
     return Array.from(genreSet).sort();
+  },
+});
+
+export const getAllStores = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getLoggedInUser(ctx);
+    
+    // Get user's games
+    const userGameRelations = await ctx.db
+      .query("userGames")
+      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .collect();
+
+    const storeSet = new Set<string>();
+    userGameRelations.forEach(rel => {
+      if (rel.ownedOnSteam) storeSet.add("steam");
+      if (rel.ownedOnEpic) storeSet.add("epic");
+    });
+
+    return Array.from(storeSet).sort();
   },
 });
 

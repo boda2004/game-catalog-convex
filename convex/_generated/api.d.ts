@@ -17,6 +17,7 @@ import type * as auth from "../auth.js";
 import type * as games from "../games.js";
 import type * as gamesInternal from "../gamesInternal.js";
 import type * as http from "../http.js";
+import type * as migration from "../migration.js";
 import type * as rawg from "../rawg.js";
 import type * as rawgClient from "../rawgClient.js";
 import type * as router from "../router.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   games: typeof games;
   gamesInternal: typeof gamesInternal;
   http: typeof http;
+  migration: typeof migration;
   rawg: typeof rawg;
   rawgClient: typeof rawgClient;
   router: typeof router;

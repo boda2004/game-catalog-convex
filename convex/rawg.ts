@@ -28,7 +28,11 @@ export const searchGamesPublic = action({
 });
 
 export const addGame = action({
-  args: { rawgId: v.number() },
+  args: { 
+    rawgId: v.number(),
+    ownedOnSteam: v.optional(v.boolean()),
+    ownedOnEpic: v.optional(v.boolean()),
+  },
   handler: async (ctx, args): Promise<any> => {
     const apiKey = process.env.RAWG_API_KEY;
     if (!apiKey) {
@@ -72,16 +76,23 @@ export const addGame = action({
       throw new Error("User not authenticated");
     }
 
-    // Add game to user's collection
+    // Add game to user's collection with store ownership
     return await ctx.runMutation(internal.gamesInternal.addGameToUserInternal, {
       ...gameInfo,
       userId,
+      ownedOnSteam: args.ownedOnSteam || false,
+      ownedOnEpic: args.ownedOnEpic || false,
     });
   },
 });
 
 export const addGamesByNames = action({
-  args: { gameNames: v.array(v.string()), jobId: v.optional(v.id("importJobs")) },
+  args: { 
+    gameNames: v.array(v.string()), 
+    jobId: v.optional(v.id("importJobs")),
+    ownedOnSteam: v.optional(v.boolean()),
+    ownedOnEpic: v.optional(v.boolean()),
+  },
   returns: v.array(
     v.object({
       name: v.string(),
@@ -197,6 +208,8 @@ export const addGamesByNames = action({
           {
           ...gameInfo,
           userId,
+          ownedOnSteam: args.ownedOnSteam || false,
+          ownedOnEpic: args.ownedOnEpic || false,
           },
         );
         results.push({

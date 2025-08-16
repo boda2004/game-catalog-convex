@@ -19,6 +19,8 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [results, setResults] = useState<BulkAddResult[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [ownedOnSteam, setOwnedOnSteam] = useState(false);
+  const [ownedOnEpic, setOwnedOnEpic] = useState(false);
 
   const addGamesByNames = useAction(api.rawg.addGamesByNames);
   const createImportJob = useMutation(api.games.createImportJob);
@@ -41,7 +43,12 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
       // Create job then call action with jobId
       const createdJobId = await createImportJob({ type: "bulk", total: names.length });
       setJobId(createdJobId as any);
-      const addResults = await addGamesByNames({ gameNames: names, jobId: createdJobId as any });
+      const addResults = await addGamesByNames({ 
+        gameNames: names, 
+        jobId: createdJobId as any,
+        ownedOnSteam,
+        ownedOnEpic,
+      });
 
       // Transform results to match expected format
       const transformedResults: BulkAddResult[] = addResults.map((result: any) => {
@@ -120,6 +127,33 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
               rows={8}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Store Ownership Selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Owned on:
+            </label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={ownedOnSteam}
+                  onChange={(e) => setOwnedOnSteam(e.target.checked)}
+                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-700">Steam</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={ownedOnEpic}
+                  onChange={(e) => setOwnedOnEpic(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-700">Epic Games</span>
+              </label>
+            </div>
           </div>
 
           {results.length > 0 && (

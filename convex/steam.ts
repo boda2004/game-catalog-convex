@@ -162,6 +162,7 @@ export const importOwnedGames = action({
         const outcome = await ctx.runMutation(internal.gamesInternal.addGameToUserInternal, {
           ...gameInfo,
           userId,
+          ownedOnSteam: true, // Automatically mark as owned on Steam
         });
         results.push({ name: gameName, success: true, addedName: gameData.name, alreadyOwned: Boolean(outcome?.alreadyOwned) });
       } catch (error) {

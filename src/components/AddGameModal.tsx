@@ -23,6 +23,9 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
   const [searchResults, setSearchResults] = useState<Game[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
+  const [ownedOnSteam, setOwnedOnSteam] = useState(false);
+  const [ownedOnEpic, setOwnedOnEpic] = useState(false);
 
   const searchGames = useAction(api.rawg.searchGamesPublic);
   const addGame = useAction(api.rawg.addGame);
@@ -47,7 +50,11 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
     if (existingIdsSet.has(gameId)) return;
     setIsAdding(true);
     try {
-      await addGame({ rawgId: gameId });
+      await addGame({ 
+        rawgId: gameId,
+        ownedOnSteam,
+        ownedOnEpic,
+      });
       toast.success("Game added to collection");
       onGameAdded?.();
       onClose();
@@ -61,6 +68,13 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
     } finally {
       setIsAdding(false);
     }
+  };
+
+  const handleGameSelect = (game: Game) => {
+    setSelectedGame(game);
+    // Reset store selection when selecting a new game
+    setOwnedOnSteam(false);
+    setOwnedOnEpic(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -130,14 +144,53 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
                           </p>
                         )}
                       </div>
+                      
+                      {/* Store Ownership Selection */}
+                      {selectedGame?.id === game.id && (
+                        <div className="mt-3 space-y-2">
+                          <p className="text-sm font-medium text-gray-700">Owned on:</p>
+                          <div className="flex gap-3">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={ownedOnSteam}
+                                onChange={(e) => setOwnedOnSteam(e.target.checked)}
+                                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                              />
+                              <span className="text-sm text-gray-700">Steam</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={ownedOnEpic}
+                                onChange={(e) => setOwnedOnEpic(e.target.checked)}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm text-gray-700">Epic Games</span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button
-                      onClick={() => handleAddGame(game.id)}
-                      disabled={isAdding || alreadyAdded}
-                      className={`px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${alreadyAdded ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
-                    >
-                      {alreadyAdded ? "Added" : (isAdding ? "Adding..." : "Add")}
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => handleGameSelect(game)}
+                        className={`px-3 py-1 text-sm rounded border ${
+                          selectedGame?.id === game.id
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {selectedGame?.id === game.id ? 'Selected' : 'Select'}
+                      </button>
+                      <button
+                        onClick={() => handleAddGame(game.id)}
+                        disabled={isAdding || alreadyAdded || !selectedGame || selectedGame.id !== game.id}
+                        className={`px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${alreadyAdded ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                      >
+                        {alreadyAdded ? "Added" : (isAdding ? "Adding..." : "Add")}
+                      </button>
+                    </div>
                   </div>
                 );
               })}

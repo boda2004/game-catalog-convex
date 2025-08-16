@@ -18,6 +18,8 @@ interface Game {
   developers: string[];
   publishers: string[];
   userAddedAt?: number;
+  ownedOnSteam?: boolean;
+  ownedOnEpic?: boolean;
 }
 
 interface GameTableProps {
@@ -25,8 +27,10 @@ interface GameTableProps {
   visibleFields: string[];
   selectedPlatforms: string[];
   selectedGenres: string[];
+  selectedStores: ("steam" | "epic")[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
+  onStoreToggle: (store: "steam" | "epic") => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
@@ -42,8 +46,10 @@ export function GameTable({
   visibleFields, 
   selectedPlatforms, 
   selectedGenres, 
+  selectedStores,
   onPlatformToggle, 
   onGenreToggle,
+  onStoreToggle,
   sortBy,
   sortOrder,
   onSortChange,
@@ -60,22 +66,27 @@ export function GameTable({
   // Ensure dropdown open states are declared before using them in effects
   const [platformOpen, setPlatformOpen] = useState(false);
   const [genreOpen, setGenreOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
 
   // Queries for dropdowns
   const [platformQuery, setPlatformQuery] = useState("");
   const [genreQuery, setGenreQuery] = useState("");
+  const [storeQuery, setStoreQuery] = useState("");
 
   const columnsRef = useRef<HTMLDivElement | null>(null);
   const platformRef = useRef<HTMLDivElement | null>(null);
   const genreRef = useRef<HTMLDivElement | null>(null);
+  const storeRef = useRef<HTMLDivElement | null>(null);
 
   // Track latest open states via refs to avoid stale closures
   const columnsOpenRef = useRef(columnsOpen);
   const platformOpenRef = useRef(platformOpen);
   const genreOpenRef = useRef(genreOpen);
+  const storeOpenRef = useRef(storeOpen);
   useEffect(() => { columnsOpenRef.current = columnsOpen; }, [columnsOpen]);
   useEffect(() => { platformOpenRef.current = platformOpen; }, [platformOpen]);
   useEffect(() => { genreOpenRef.current = genreOpen; }, [genreOpen]);
+  useEffect(() => { storeOpenRef.current = storeOpen; }, [storeOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -89,6 +100,9 @@ export function GameTable({
       if (genreOpenRef.current && genreRef.current && !genreRef.current.contains(target)) {
         setGenreOpen(false);
       }
+      if (storeOpenRef.current && storeRef.current && !storeRef.current.contains(target)) {
+        setStoreOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -98,6 +112,7 @@ export function GameTable({
     { key: "name", label: "Name" },
     { key: "platforms", label: "Platforms" },
     { key: "genres", label: "Genres" },
+    { key: "stores", label: "Stores" },
     { key: "rating", label: "Rating" },
     { key: "metacritic", label: "Metacritic" },
     { key: "released", label: "Released" },
@@ -109,6 +124,7 @@ export function GameTable({
     name: "Name",
     platforms: "Platforms",
     genres: "Genres",
+    stores: "Stores",
     rating: "Rating",
     metacritic: "Metacritic",
     released: "Released",
@@ -142,7 +158,7 @@ export function GameTable({
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
@@ -208,6 +224,24 @@ export function GameTable({
             )}
           </div>
         );
+      case "stores":
+        return (
+          <div className="flex flex-wrap gap-1">
+            {game.ownedOnSteam && (
+              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+                Steam
+              </span>
+            )}
+            {game.ownedOnEpic && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                Epic Games
+              </span>
+            )}
+            {!game.ownedOnSteam && !game.ownedOnEpic && (
+              <span className="text-gray-400 text-xs">-</span>
+            )}
+          </div>
+        );
       case "rating":
         return game.rating ? (
           <div className="flex items-center gap-1">
@@ -262,6 +296,7 @@ export function GameTable({
 
   const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
   const allGenresQuery = useQuery(api.games.getAllGenres);
+  const allStoresQuery = useQuery(api.games.getAllStores);
 
   const allPlatforms = useMemo(() => {
     if (allPlatformsQuery && Array.isArray(allPlatformsQuery)) {
@@ -281,8 +316,21 @@ export function GameTable({
     return Array.from(s).sort();
   }, [allGenresQuery, games]);
 
+  const allStores = useMemo(() => {
+    if (allStoresQuery && Array.isArray(allStoresQuery)) {
+      return allStoresQuery;
+    }
+    const s = new Set<string>();
+    games.forEach(g => {
+      if (g.ownedOnSteam) s.add("steam");
+      if (g.ownedOnEpic) s.add("epic");
+    });
+    return Array.from(s).sort();
+  }, [allStoresQuery, games]);
+
   const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
   const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
+  const filteredStores = useMemo(() => allStores.filter(s => s.toLowerCase().includes(storeQuery.toLowerCase())), [allStores, storeQuery]);
 
   const clearPlatforms = () => {
     selectedPlatforms.forEach(p => onPlatformToggle(p));
@@ -291,6 +339,16 @@ export function GameTable({
   const clearGenres = () => {
     selectedGenres.forEach(g => onGenreToggle(g));
     setGenreQuery("");
+  };
+  const clearStores = () => {
+    selectedStores.forEach(s => onStoreToggle(s));
+    setStoreQuery("");
+  };
+
+  const handleStoreToggle = (store: string) => {
+    if (store === "steam" || store === "epic") {
+      onStoreToggle(store);
+    }
   };
 
   return (
@@ -367,7 +425,7 @@ export function GameTable({
               <tr>
                 {visibleFields.map((field) => {
                   const isSortable = sortableFields.includes(field);
-                  const isFilterableCombo = field === 'platforms' || field === 'genres';
+                  const isFilterableCombo = field === 'platforms' || field === 'genres' || field === 'stores';
                   return (
                     <th
                       key={field}
@@ -402,7 +460,7 @@ export function GameTable({
                               selected={selectedPlatforms}
                               placeholder="Filter platforms..."
                             />
-                          ) : (
+                          ) : field === 'genres' ? (
                             <Dropdown
                               label="Genres"
                               isOpen={genreOpen}
@@ -414,6 +472,19 @@ export function GameTable({
                               onToggle={onGenreToggle}
                               selected={selectedGenres}
                               placeholder="Filter genres..."
+                            />
+                          ) : (
+                            <Dropdown
+                              label="Stores"
+                              isOpen={storeOpen}
+                              count={selectedStores.length}
+                              query={storeQuery}
+                              setOpen={setStoreOpen}
+                              setQuery={setStoreQuery}
+                              items={filteredStores}
+                              onToggle={handleStoreToggle}
+                              selected={selectedStores}
+                              placeholder="Filter stores..."
                             />
                           )}
                         </div>

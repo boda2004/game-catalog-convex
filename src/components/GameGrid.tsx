@@ -15,14 +15,18 @@ interface Game {
   platforms: string[];
   genres: string[];
   userAddedAt?: number;
+  ownedOnSteam?: boolean;
+  ownedOnEpic?: boolean;
 }
 
 interface GameGridProps {
   games: Game[];
   selectedPlatforms: string[];
   selectedGenres: string[];
+  selectedStores: string[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
+  onStoreToggle: (store: string) => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
@@ -36,8 +40,10 @@ export function GameGrid({
   games, 
   selectedPlatforms, 
   selectedGenres, 
+  selectedStores,
   onPlatformToggle, 
   onGenreToggle,
+  onStoreToggle,
   sortBy,
   sortOrder,
   onSortChange,
@@ -50,6 +56,7 @@ export function GameGrid({
 
   const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
   const allGenresQuery = useQuery(api.games.getAllGenres);
+  const allStoresQuery = useQuery(api.games.getAllStores);
 
   const allPlatforms = useMemo(() => {
     if (allPlatformsQuery && Array.isArray(allPlatformsQuery)) {
@@ -70,13 +77,30 @@ export function GameGrid({
     games.forEach(g => g.genres.forEach(x => s.add(x)));
     return Array.from(s).sort();
   }, [allGenresQuery, games]);
+
+  const allStores = useMemo(() => {
+    if (allStoresQuery && Array.isArray(allStoresQuery)) {
+      return allStoresQuery;
+    }
+    // fallback to current-page derived values if query not ready
+    const s = new Set<string>();
+    games.forEach(g => {
+      if (g.ownedOnSteam) s.add("steam");
+      if (g.ownedOnEpic) s.add("epic");
+    });
+    return Array.from(s).sort();
+  }, [allStoresQuery, games]);
+
   const [platformQuery, setPlatformQuery] = useState("");
   const [genreQuery, setGenreQuery] = useState("");
+  const [storeQuery, setStoreQuery] = useState("");
   const [platformOpen, setPlatformOpen] = useState(false);
   const [genreOpen, setGenreOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
   const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
   const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
+  const filteredStores = useMemo(() => allStores.filter(s => s.toLowerCase().includes(storeQuery.toLowerCase())), [allStores, storeQuery]);
 
   const clearPlatforms = () => {
     selectedPlatforms.forEach(p => onPlatformToggle(p));
@@ -86,9 +110,14 @@ export function GameGrid({
     selectedGenres.forEach(g => onGenreToggle(g));
     setGenreQuery("");
   };
+  const clearStores = () => {
+    selectedStores.forEach(s => onStoreToggle(s));
+    setStoreQuery("");
+  };
 
   const platformRef = useRef<HTMLDivElement | null>(null);
   const genreRef = useRef<HTMLDivElement | null>(null);
+  const storeRef = useRef<HTMLDivElement | null>(null);
   const sortRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -100,13 +129,16 @@ export function GameGrid({
       if (genreOpen && genreRef.current && !genreRef.current.contains(target)) {
         setGenreOpen(false);
       }
+      if (storeOpen && storeRef.current && !storeRef.current.contains(target)) {
+        setStoreOpen(false);
+      }
       if (sortOpen && sortRef.current && !sortRef.current.contains(target)) {
         setSortOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [platformOpen, genreOpen, sortOpen]);
+  }, [platformOpen, genreOpen, storeOpen, sortOpen]);
 
   const sortLabelMap: Record<string, string> = {
     userAddedAt: "Date Added",
@@ -269,6 +301,40 @@ export function GameGrid({
               </div>
             )}
           </div>
+          <div className="relative w-64" ref={storeRef}>
+            <button type="button" onClick={() => setStoreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+              <span>{selectedStores.length ? `Stores (${selectedStores.length})` : "Stores"}</span>
+              <span className="text-xs text-gray-500">{storeOpen ? "▲" : "▼"}</span>
+            </button>
+            {storeOpen && (
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+                <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
+                  <input
+                    value={storeQuery}
+                    onChange={(e) => setStoreQuery(e.target.value)}
+                    placeholder="Filter stores..."
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                  />
+                  <button type="button" onClick={clearStores} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                </div>
+                <div className="max-h-48 overflow-auto">
+                  {filteredStores.length === 0 && (
+                    <div className="px-2 py-2 text-xs text-gray-500">No results</div>
+                  )}
+                  {filteredStores.map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); onStoreToggle(s); }}
+                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedStores.includes(s) ? 'bg-green-50 text-green-700' : ''}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -371,6 +437,24 @@ export function GameGrid({
                   )}
                 </div>
               </div>
+
+              {/* Store Ownership */}
+              {(game.ownedOnSteam || game.ownedOnEpic) && (
+                <div className="mt-3">
+                  <div className="flex flex-wrap gap-1">
+                    {game.ownedOnSteam && (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+                        Steam
+                      </span>
+                    )}
+                    {game.ownedOnEpic && (
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                        Epic Games
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}

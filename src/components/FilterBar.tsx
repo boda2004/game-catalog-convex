@@ -6,8 +6,10 @@ interface FilterBarProps {
   onClearFilters: () => void;
   selectedPlatforms: string[];
   selectedGenres: string[];
+  selectedStores: ("steam" | "epic")[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
+  onStoreToggle: (store: "steam" | "epic") => void;
 }
 
 const FilterBarInternal = ({
@@ -16,11 +18,13 @@ const FilterBarInternal = ({
   onClearFilters,
   selectedPlatforms,
   selectedGenres,
+  selectedStores,
   onPlatformToggle,
   onGenreToggle,
+  onStoreToggle,
 }: FilterBarProps) => {
   const hasActiveFilters =
-    selectedPlatforms.length > 0 || selectedGenres.length > 0;
+    selectedPlatforms.length > 0 || selectedGenres.length > 0 || selectedStores.length > 0;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-5 space-y-3">
@@ -79,6 +83,17 @@ const FilterBarInternal = ({
                 title="Remove genre filter"
               >
                 {g}
+                <span className="ml-0.5">✕</span>
+              </button>
+            ))}
+            {selectedStores.map((s) => (
+              <button
+                key={`s-${s}`}
+                onClick={() => onStoreToggle(s)}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 hover:bg-green-200"
+                title="Remove store filter"
+              >
+                {s}
                 <span className="ml-0.5">✕</span>
               </button>
             ))}

@@ -17,6 +17,7 @@ export function GameCatalog() {
   const [isFetching, setIsFetching] = useState(true);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedStores, setSelectedStores] = useState<("steam" | "epic")[]>([]);
   const [sortBy, setSortBy] = useState("userAddedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -33,6 +34,7 @@ export function GameCatalog() {
     searchTerm: debouncedSearchTerm || undefined,
     platforms: selectedPlatforms.length > 0 ? selectedPlatforms : undefined,
     genres: selectedGenres.length > 0 ? selectedGenres : undefined,
+    stores: selectedStores.length > 0 ? selectedStores : undefined,
     sortBy,
     sortOrder,
     page: currentPage,
@@ -50,7 +52,7 @@ export function GameCatalog() {
 
   useEffect(() => {
     setIsFetching(true);
-  }, [debouncedSearchTerm, JSON.stringify(selectedPlatforms), JSON.stringify(selectedGenres), sortBy, sortOrder, currentPage, itemsPerPage]);
+  }, [debouncedSearchTerm, JSON.stringify(selectedPlatforms), JSON.stringify(selectedGenres), JSON.stringify(selectedStores), sortBy, sortOrder, currentPage, itemsPerPage]);
 
   useEffect(() => {
     if (gamesData !== undefined) {
@@ -62,7 +64,7 @@ export function GameCatalog() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm, JSON.stringify(selectedPlatforms), JSON.stringify(selectedGenres), sortBy, sortOrder, preferences?.itemsPerPage]);
+  }, [debouncedSearchTerm, JSON.stringify(selectedPlatforms), JSON.stringify(selectedGenres), JSON.stringify(selectedStores), sortBy, sortOrder, preferences?.itemsPerPage]);
 
   const handlePlatformToggle = useCallback((platform: string) => {
     setSelectedPlatforms(prev =>
@@ -80,10 +82,19 @@ export function GameCatalog() {
     );
   }, []);
 
+  const handleStoreToggle = useCallback((store: "steam" | "epic") => {
+    setSelectedStores(prev =>
+      prev.includes(store)
+        ? prev.filter(s => s !== store)
+        : [...prev, store]
+    );
+  }, []);
+
   const handleClearFilters = useCallback(() => {
     setSearchTerm("");
     setSelectedPlatforms([]);
     setSelectedGenres([]);
+    setSelectedStores([]);
   }, []);
 
   const handleViewModeChange = useCallback((mode: "grid" | "table") => {
@@ -170,8 +181,10 @@ export function GameCatalog() {
         onClearFilters={handleClearFilters}
         selectedPlatforms={selectedPlatforms}
         selectedGenres={selectedGenres}
+        selectedStores={selectedStores}
         onPlatformToggle={handlePlatformToggle}
         onGenreToggle={handleGenreToggle}
+        onStoreToggle={handleStoreToggle}
       />
 
       {/* Controls moved into GameGrid and GameTable top blocks */}
@@ -205,8 +218,10 @@ export function GameCatalog() {
             games={games}
             selectedPlatforms={selectedPlatforms}
             selectedGenres={selectedGenres}
+            selectedStores={selectedStores}
             onPlatformToggle={handlePlatformToggle}
             onGenreToggle={handleGenreToggle}
+            onStoreToggle={handleStoreToggle}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
@@ -221,12 +236,14 @@ export function GameCatalog() {
             visibleFields={preferences.visibleFields}
             selectedPlatforms={selectedPlatforms}
             selectedGenres={selectedGenres}
+            selectedStores={selectedStores}
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}
             onToggleFieldVisibility={handleToggleFieldVisibility}
             onPlatformToggle={handlePlatformToggle}
             onGenreToggle={handleGenreToggle}
+            onStoreToggle={handleStoreToggle}
             itemsPerPage={preferences.itemsPerPage}
             onItemsPerPageChange={handleItemsPerPageChange}
             onViewModeChange={handleViewModeChange}
