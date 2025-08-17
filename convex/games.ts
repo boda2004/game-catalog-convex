@@ -20,7 +20,7 @@ export const getUserGames = query({
     searchTerm: v.optional(v.string()),
     platforms: v.optional(v.array(v.string())),
     genres: v.optional(v.array(v.string())),
-    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic")))),
+    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic"), v.literal("gog")))),
     sortBy: v.optional(v.string()),
     sortOrder: v.optional(v.string()),
     page: v.optional(v.number()),
@@ -54,6 +54,7 @@ export const getUserGames = query({
           userAddedAt: userGameRel?.addedAt,
           ownedOnSteam: userGameRel?.ownedOnSteam || false,
           ownedOnEpic: userGameRel?.ownedOnEpic || false,
+          ownedOnGog: userGameRel?.ownedOnGog || false,
         } : null;
       })
     );
@@ -97,6 +98,7 @@ export const getUserGames = query({
       games = games.filter(game => {
         if (args.stores!.includes("steam") && game.ownedOnSteam) return true;
         if (args.stores!.includes("epic") && game.ownedOnEpic) return true;
+        if (args.stores!.includes("gog") && game.ownedOnGog) return true;
         return false;
       });
     }
@@ -203,6 +205,7 @@ export const getGameById = query({
       userAddedAt: userGameRel?.addedAt,
       ownedOnSteam: userGameRel?.ownedOnSteam || false,
       ownedOnEpic: userGameRel?.ownedOnEpic || false,
+      ownedOnGog: userGameRel?.ownedOnGog || false,
     };
   },
 });
@@ -227,6 +230,7 @@ export const addGameToUser = mutation({
     tags: v.array(v.string()),
     ownedOnSteam: v.optional(v.boolean()),
     ownedOnEpic: v.optional(v.boolean()),
+    ownedOnGog: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const user = await getLoggedInUser(ctx);
@@ -260,10 +264,12 @@ export const addGameToUser = mutation({
       // Update existing ownership with new store flags
       const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || args.ownedOnSteam || false;
       const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || args.ownedOnEpic || false;
+      const updatedOwnedOnGog = existingUserGame.ownedOnGog || args.ownedOnGog || false;
       
       await ctx.db.patch(existingUserGame._id, {
         ownedOnSteam: updatedOwnedOnSteam,
         ownedOnEpic: updatedOwnedOnEpic,
+        ownedOnGog: updatedOwnedOnGog,
       });
       
       return gameId;
@@ -276,6 +282,7 @@ export const addGameToUser = mutation({
       addedAt: Date.now(),
       ownedOnSteam: args.ownedOnSteam || false,
       ownedOnEpic: args.ownedOnEpic || false,
+      ownedOnGog: args.ownedOnGog || false,
     });
 
     return gameId;
@@ -434,6 +441,7 @@ export const getAllStores = query({
     userGameRelations.forEach(rel => {
       if (rel.ownedOnSteam) storeSet.add("steam");
       if (rel.ownedOnEpic) storeSet.add("epic");
+      if (rel.ownedOnGog) storeSet.add("gog");
     });
 
     return Array.from(storeSet).sort();

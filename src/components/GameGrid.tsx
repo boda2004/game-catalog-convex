@@ -17,6 +17,7 @@ interface Game {
   userAddedAt?: number;
   ownedOnSteam?: boolean;
   ownedOnEpic?: boolean;
+  ownedOnGog?: boolean;
 }
 
 interface GameGridProps {
@@ -87,6 +88,7 @@ export function GameGrid({
     games.forEach(g => {
       if (g.ownedOnSteam) s.add("steam");
       if (g.ownedOnEpic) s.add("epic");
+      if (g.ownedOnGog) s.add("gog");
     });
     return Array.from(s).sort();
   }, [allStoresQuery, games]);
@@ -439,7 +441,7 @@ export function GameGrid({
               </div>
 
               {/* Store Ownership */}
-              {(game.ownedOnSteam || game.ownedOnEpic) && (
+              {(game.ownedOnSteam || game.ownedOnEpic || game.ownedOnGog) && (
                 <div className="mt-3">
                   <div className="flex flex-wrap gap-1">
                     {game.ownedOnSteam && (
@@ -450,6 +452,11 @@ export function GameGrid({
                     {game.ownedOnEpic && (
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
                         Epic Games
+                      </span>
+                    )}
+                    {game.ownedOnGog && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+                        GOG
                       </span>
                     )}
                   </div>

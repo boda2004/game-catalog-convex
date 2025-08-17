@@ -21,6 +21,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
   const [jobId, setJobId] = useState<string | null>(null);
   const [ownedOnSteam, setOwnedOnSteam] = useState(false);
   const [ownedOnEpic, setOwnedOnEpic] = useState(false);
+  const [ownedOnGog, setOwnedOnGog] = useState(false);
 
   const addGamesByNames = useAction(api.rawg.addGamesByNames);
   const createImportJob = useMutation(api.games.createImportJob);
@@ -48,6 +49,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
         jobId: createdJobId as any,
         ownedOnSteam,
         ownedOnEpic,
+        ownedOnGog,
       });
 
       // Transform results to match expected format
@@ -152,6 +154,15 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Epic Games</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={ownedOnGog}
+                  onChange={(e) => setOwnedOnGog(e.target.checked)}
+                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                />
+                <span className="text-sm text-gray-700">GOG</span>
               </label>
             </div>
           </div>

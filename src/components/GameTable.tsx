@@ -20,6 +20,7 @@ interface Game {
   userAddedAt?: number;
   ownedOnSteam?: boolean;
   ownedOnEpic?: boolean;
+  ownedOnGog?: boolean;
 }
 
 interface GameTableProps {
@@ -27,10 +28,10 @@ interface GameTableProps {
   visibleFields: string[];
   selectedPlatforms: string[];
   selectedGenres: string[];
-  selectedStores: ("steam" | "epic")[];
+  selectedStores: ("steam" | "epic" | "gog")[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
-  onStoreToggle: (store: "steam" | "epic") => void;
+  onStoreToggle: (store: "steam" | "epic" | "gog") => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
@@ -237,7 +238,12 @@ export function GameTable({
                 Epic Games
               </span>
             )}
-            {!game.ownedOnSteam && !game.ownedOnEpic && (
+            {game.ownedOnGog && (
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+                GOG
+              </span>
+            )}
+            {!game.ownedOnSteam && !game.ownedOnEpic && !game.ownedOnGog && (
               <span className="text-gray-400 text-xs">-</span>
             )}
           </div>
@@ -324,6 +330,7 @@ export function GameTable({
     games.forEach(g => {
       if (g.ownedOnSteam) s.add("steam");
       if (g.ownedOnEpic) s.add("epic");
+      if (g.ownedOnGog) s.add("gog");
     });
     return Array.from(s).sort();
   }, [allStoresQuery, games]);
@@ -346,7 +353,7 @@ export function GameTable({
   };
 
   const handleStoreToggle = (store: string) => {
-    if (store === "steam" || store === "epic") {
+    if (store === "steam" || store === "epic" || store === "gog") {
       onStoreToggle(store);
     }
   };

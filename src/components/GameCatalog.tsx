@@ -17,7 +17,7 @@ export function GameCatalog() {
   const [isFetching, setIsFetching] = useState(true);
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedStores, setSelectedStores] = useState<("steam" | "epic")[]>([]);
+  const [selectedStores, setSelectedStores] = useState<("steam" | "epic" | "gog")[]>([]);
   const [sortBy, setSortBy] = useState("userAddedAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +82,7 @@ export function GameCatalog() {
     );
   }, []);
 
-  const handleStoreToggle = useCallback((store: "steam" | "epic") => {
+  const handleStoreToggle = useCallback((store: "steam" | "epic" | "gog") => {
     setSelectedStores(prev =>
       prev.includes(store)
         ? prev.filter(s => s !== store)

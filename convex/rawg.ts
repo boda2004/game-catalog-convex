@@ -32,6 +32,7 @@ export const addGame = action({
     rawgId: v.number(),
     ownedOnSteam: v.optional(v.boolean()),
     ownedOnEpic: v.optional(v.boolean()),
+    ownedOnGog: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<any> => {
     const apiKey = process.env.RAWG_API_KEY;
@@ -82,6 +83,7 @@ export const addGame = action({
       userId,
       ownedOnSteam: args.ownedOnSteam || false,
       ownedOnEpic: args.ownedOnEpic || false,
+      ownedOnGog: args.ownedOnGog || false,
     });
   },
 });
@@ -92,6 +94,7 @@ export const addGamesByNames = action({
     jobId: v.optional(v.id("importJobs")),
     ownedOnSteam: v.optional(v.boolean()),
     ownedOnEpic: v.optional(v.boolean()),
+    ownedOnGog: v.optional(v.boolean()),
   },
   returns: v.array(
     v.object({
@@ -210,6 +213,7 @@ export const addGamesByNames = action({
           userId,
           ownedOnSteam: args.ownedOnSteam || false,
           ownedOnEpic: args.ownedOnEpic || false,
+          ownedOnGog: args.ownedOnGog || false,
           },
         );
         results.push({

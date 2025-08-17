@@ -6,10 +6,10 @@ interface FilterBarProps {
   onClearFilters: () => void;
   selectedPlatforms: string[];
   selectedGenres: string[];
-  selectedStores: ("steam" | "epic")[];
+  selectedStores: ("steam" | "epic" | "gog")[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
-  onStoreToggle: (store: "steam" | "epic") => void;
+  onStoreToggle: (store: "steam" | "epic" | "gog") => void;
 }
 
 const FilterBarInternal = ({

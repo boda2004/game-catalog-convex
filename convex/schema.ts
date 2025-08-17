@@ -36,6 +36,7 @@ const applicationTables = {
     // Store ownership flags
     ownedOnSteam: v.optional(v.boolean()),
     ownedOnEpic: v.optional(v.boolean()),
+    ownedOnGog: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
     .index("by_game", ["gameId"])

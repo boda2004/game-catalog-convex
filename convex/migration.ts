@@ -13,6 +13,7 @@ export const addStoreOwnershipFields = internalMutation({
       await ctx.db.patch(userGame._id, {
         ownedOnSteam: false,
         ownedOnEpic: false,
+        ownedOnGog: false,
       });
     }
     
