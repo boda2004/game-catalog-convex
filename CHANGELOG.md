@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/boda2004/game-catalog-convex/compare/v1.4.0...v1.5.0) (2025-08-17)
+
+
+### Features
+
+* **games:** add GOG store ownership support ([2d98151](https://github.com/boda2004/game-catalog-convex/commit/2d981511db0d88967f68fe4d51e254a44bac704a))
+
 ## [1.4.0](https://github.com/boda2004/game-catalog-convex/compare/v1.3.0...v1.4.0) (2025-08-16)
 
 
