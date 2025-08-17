@@ -82,11 +82,11 @@ export function GameCatalog() {
     );
   }, []);
 
-  const handleStoreToggle = useCallback((store: "steam" | "epic" | "gog") => {
+  const handleStoreToggle = useCallback((store: string) => {
     setSelectedStores(prev =>
-      prev.includes(store)
+      prev.includes(store as "steam" | "epic" | "gog")
         ? prev.filter(s => s !== store)
-        : [...prev, store]
+        : [...prev, store as "steam" | "epic" | "gog"]
     );
   }, []);
 
