@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/boda2004/game-catalog-convex/compare/v1.5.0...v1.6.0) (2025-08-19)
+
+
+### Features
+
+* Allow editing of game store ownership ([#14](https://github.com/boda2004/game-catalog-convex/issues/14)) ([99288b6](https://github.com/boda2004/game-catalog-convex/commit/99288b66be9239dbfb0cb2fcb42459f64fc5298c))
+
 ## [1.5.0](https://github.com/boda2004/game-catalog-convex/compare/v1.4.0...v1.5.0) (2025-08-17)
 
 
