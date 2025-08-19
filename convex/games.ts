@@ -267,17 +267,12 @@ export const addGameToUser = mutation({
       .unique();
 
     if (existingUserGame) {
-      // Update existing ownership with new store flags
-      const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || args.ownedOnSteam || false;
-      const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || args.ownedOnEpic || false;
-      const updatedOwnedOnGog = existingUserGame.ownedOnGog || args.ownedOnGog || false;
-      
+      // Game already in collection, update ownership
       await ctx.db.patch(existingUserGame._id, {
-        ownedOnSteam: updatedOwnedOnSteam,
-        ownedOnEpic: updatedOwnedOnEpic,
-        ownedOnGog: updatedOwnedOnGog,
+        ownedOnSteam: args.ownedOnSteam ?? false,
+        ownedOnEpic: args.ownedOnEpic ?? false,
+        ownedOnGog: args.ownedOnGog ?? false,
       });
-      
       return gameId;
     }
 
