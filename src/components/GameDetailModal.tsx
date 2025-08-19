@@ -12,7 +12,7 @@ interface GameDetailModalProps {
 export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
   const game = useQuery(api.games.getGameById, { gameId });
   const removeGame = useMutation(api.games.removeGameFromUser);
-  const updateGameOwnership = useMutation(api.games.updateGameOwnership);
+  const updateGameOwnership = useMutation(api.games.updateGameOwnershipFromDetail);
 
   const [isEditingStores, setIsEditingStores] = useState(false);
   const [ownedOnSteam, setOwnedOnSteam] = useState(false);
