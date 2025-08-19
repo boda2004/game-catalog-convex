@@ -159,7 +159,7 @@ export const getUserGames = query({
   },
 });
 
-export const getOwnedRawgIds = query({
+export const getOwnedGamesInfo = query({
   args: {},
   handler: async (ctx) => {
     const user = await getLoggedInUser(ctx);
@@ -168,16 +168,22 @@ export const getOwnedRawgIds = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    if (userGameRelations.length === 0) return [] as number[];
+    if (userGameRelations.length === 0) return [];
 
-    const gameIds = userGameRelations.map((rel) => rel.gameId);
-    const games = await Promise.all(gameIds.map((id) => ctx.db.get(id)));
-    const rawgIds = games
-      .filter((g) => g && typeof g.rawgId === "number")
-      .map((g: any) => g.rawgId as number);
+    const games = await Promise.all(
+      userGameRelations.map(async (rel) => {
+        const game = await ctx.db.get(rel.gameId);
+        return {
+          gameId: rel.gameId,
+          rawgId: game?.rawgId,
+          ownedOnSteam: rel.ownedOnSteam || false,
+          ownedOnEpic: rel.ownedOnEpic || false,
+          ownedOnGog: rel.ownedOnGog || false,
+        };
+      }),
+    );
 
-    // Deduplicate just in case
-    return Array.from(new Set(rawgIds));
+    return games.filter((g) => g.rawgId);
   },
 });
 
@@ -296,8 +302,8 @@ export const removeGameFromUser = mutation({
 
     const userGame = await ctx.db
       .query("userGames")
-      .withIndex("by_user_and_game", (q) => 
-        q.eq("userId", user._id).eq("gameId", args.gameId)
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", user._id).eq("gameId", args.gameId),
       )
       .unique();
 
@@ -306,6 +312,73 @@ export const removeGameFromUser = mutation({
     }
 
     await ctx.db.delete(userGame._id);
+  },
+});
+
+export const updateGameOwnership = mutation({
+  args: {
+    gameId: v.id("games"),
+    ownedOnSteam: v.boolean(),
+    ownedOnEpic: v.boolean(),
+    ownedOnGog: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getLoggedInUser(ctx);
+
+    const userGame = await ctx.db
+      .query("userGames")
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", user._id).eq("gameId", args.gameId),
+      )
+      .unique();
+
+    if (!userGame) {
+      throw new Error("Game not found in your collection");
+    }
+
+    await ctx.db.patch(userGame._id, {
+      ownedOnSteam: args.ownedOnSteam,
+      ownedOnEpic: args.ownedOnEpic,
+      ownedOnGog: args.ownedOnGog,
+    });
+  },
+});
+
+export const updateGameOwnershipByRawgId = mutation({
+  args: {
+    rawgId: v.number(),
+    ownedOnSteam: v.boolean(),
+    ownedOnEpic: v.boolean(),
+    ownedOnGog: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getLoggedInUser(ctx);
+
+    const game = await ctx.db
+      .query("games")
+      .withIndex("by_rawg_id", (q) => q.eq("rawgId", args.rawgId))
+      .unique();
+
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    const userGame = await ctx.db
+      .query("userGames")
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", user._id).eq("gameId", game._id),
+      )
+      .unique();
+
+    if (!userGame) {
+      throw new Error("Game not found in your collection");
+    }
+
+    await ctx.db.patch(userGame._id, {
+      ownedOnSteam: args.ownedOnSteam,
+      ownedOnEpic: args.ownedOnEpic,
+      ownedOnGog: args.ownedOnGog,
+    });
   },
 });
 

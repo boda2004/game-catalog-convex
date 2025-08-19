@@ -27,7 +27,7 @@ export const searchGamesPublic = action({
   },
 });
 
-export const addGame = action({
+export const manageGame = action({
   args: { 
     rawgId: v.number(),
     ownedOnSteam: v.optional(v.boolean()),
