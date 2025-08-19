@@ -41,9 +41,6 @@ export function GameCatalog() {
     itemsPerPage,
   });
 
-  // Fetch full list of owned RAWG IDs (not paginated)
-  const ownedRawgIds = useQuery(api.games.getOwnedRawgIds) || [];
-
   const prevGamesData = useRef(gamesData);
   if (gamesData !== undefined) {
     prevGamesData.current = gamesData;
@@ -265,7 +262,7 @@ export function GameCatalog() {
 
       {/* Modals */}
       {showAddModal && (
-        <AddGameModal onClose={() => setShowAddModal(false)} existingRawgIds={ownedRawgIds as number[]} />
+        <AddGameModal onClose={() => setShowAddModal(false)} />
       )}
 
       {showBulkAddModal && (
