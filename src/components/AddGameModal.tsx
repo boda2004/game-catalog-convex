@@ -28,7 +28,8 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
   const [ownedOnGog, setOwnedOnGog] = useState(false);
 
   const searchGames = useAction(api.rawg.searchGamesPublic);
-  const manageGame = useAction(api.rawg.manageGame);
+  const addGame = useAction(api.rawg.addGame);
+  const updateGame = useMutation(api.games.updateOwnedGameStores);
   const ownedGamesInfo = useQuery(api.games.getOwnedGamesInfo);
 
   const ownedGamesMap = useMemo(() => {
@@ -50,21 +51,31 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
     }
   };
 
-  const handleManageGame = async (gameId: number) => {
+  const handleGameAction = async (gameId: number) => {
     setIsSubmitting(true);
+    const isUpdating = ownedGamesMap.has(gameId);
     try {
-      await manageGame({
-        rawgId: gameId,
-        ownedOnSteam,
-        ownedOnEpic,
-        ownedOnGog,
-      });
-      const isUpdating = ownedGamesMap.has(gameId);
-      toast.success(isUpdating ? "Game updated successfully" : "Game added to collection");
+      if (isUpdating) {
+        await updateGame({
+          rawgId: gameId,
+          ownedOnSteam,
+          ownedOnEpic,
+          ownedOnGog,
+        });
+        toast.success("Game updated successfully");
+      } else {
+        await addGame({
+          rawgId: gameId,
+          ownedOnSteam,
+          ownedOnEpic,
+          ownedOnGog,
+        });
+        toast.success("Game added to collection");
+      }
       onGameAdded?.();
       onClose();
     } catch (error) {
-      toast.error("Failed to save game");
+      toast.error(isUpdating ? "Failed to update game" : "Failed to add game");
     } finally {
       setIsSubmitting(false);
     }
@@ -199,7 +210,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
                         {selectedGame?.id === game.id ? 'Selected' : 'Select'}
                       </button>
                       <button
-                        onClick={() => handleManageGame(game.id)}
+                        onClick={() => handleGameAction(game.id)}
                         disabled={isSubmitting || !selectedGame || selectedGame.id !== game.id}
                         className={`w-24 text-center px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${
                           alreadyAdded

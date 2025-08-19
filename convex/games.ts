@@ -349,7 +349,7 @@ export const updateGameOwnershipFromDetail = mutation({
   },
 });
 
-export const updateGameOwnershipByRawgId = mutation({
+export const updateOwnedGameStores = mutation({
   args: {
     rawgId: v.number(),
     ownedOnSteam: v.boolean(),
