@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 interface GameDetailModalProps {
   gameId: Id<"games">;
@@ -11,6 +12,20 @@ interface GameDetailModalProps {
 export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
   const game = useQuery(api.games.getGameById, { gameId });
   const removeGame = useMutation(api.games.removeGameFromUser);
+  const updateGameOwnership = useMutation(api.games.updateGameOwnershipFromDetail);
+
+  const [isEditingStores, setIsEditingStores] = useState(false);
+  const [ownedOnSteam, setOwnedOnSteam] = useState(false);
+  const [ownedOnEpic, setOwnedOnEpic] = useState(false);
+  const [ownedOnGog, setOwnedOnGog] = useState(false);
+
+  useEffect(() => {
+    if (game) {
+      setOwnedOnSteam(game.ownedOnSteam || false);
+      setOwnedOnEpic(game.ownedOnEpic || false);
+      setOwnedOnGog(game.ownedOnGog || false);
+    }
+  }, [game]);
 
   const handleRemoveGame = async () => {
     try {
@@ -19,6 +34,22 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
       onClose();
     } catch (error) {
       toast.error("Failed to remove game");
+    }
+  };
+
+  const handleUpdateStores = async () => {
+    if (!game) return;
+    try {
+      await updateGameOwnership({
+        gameId: game._id,
+        ownedOnSteam,
+        ownedOnEpic,
+        ownedOnGog,
+      });
+      toast.success("Store ownership updated");
+      setIsEditingStores(false);
+    } catch (error) {
+      toast.error("Failed to update stores");
     }
   };
 
@@ -188,6 +219,49 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
                   <div>
                     <span className="text-sm text-gray-600">Added to Collection:</span>
                     <p className="font-medium">{new Date(game.userAddedAt).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Store Ownership */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <h3 className="font-semibold text-gray-900">Owned On</h3>
+                  {!isEditingStores && (
+                    <button onClick={() => setIsEditingStores(true)} className="text-sm text-blue-600 hover:underline">
+                      Edit
+                    </button>
+                  )}
+                </div>
+                {isEditingStores ? (
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={ownedOnSteam} onChange={(e) => setOwnedOnSteam(e.target.checked)} className="rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                      <span>Steam</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={ownedOnEpic} onChange={(e) => setOwnedOnEpic(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <span>Epic Games</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input type="checkbox" checked={ownedOnGog} onChange={(e) => setOwnedOnGog(e.target.checked)} className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                      <span>GOG</span>
+                    </label>
+                    <div className="flex gap-2 pt-2">
+                      <button onClick={handleUpdateStores} className="flex-1 bg-blue-600 text-white py-1.5 px-3 rounded-lg text-sm hover:bg-blue-700">
+                        Save
+                      </button>
+                      <button onClick={() => setIsEditingStores(false)} className="flex-1 bg-gray-200 text-gray-700 py-1.5 px-3 rounded-lg text-sm hover:bg-gray-300">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {game.ownedOnSteam && <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">Steam</span>}
+                    {game.ownedOnEpic && <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Epic Games</span>}
+                    {game.ownedOnGog && <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">GOG</span>}
+                    {!game.ownedOnSteam && !game.ownedOnEpic && !game.ownedOnGog && <p className="text-sm text-gray-500">Not specified</p>}
                   </div>
                 )}
               </div>

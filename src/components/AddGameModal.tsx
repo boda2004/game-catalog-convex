@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useMutation, useAction } from "convex/react";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 
@@ -15,14 +15,13 @@ interface Game {
 interface AddGameModalProps {
   onClose: () => void;
   onGameAdded?: () => void;
-  existingRawgIds?: number[];
 }
 
-export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: AddGameModalProps) {
+export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Game[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
   const [ownedOnSteam, setOwnedOnSteam] = useState(false);
   const [ownedOnEpic, setOwnedOnEpic] = useState(false);
@@ -30,8 +29,13 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
 
   const searchGames = useAction(api.rawg.searchGamesPublic);
   const addGame = useAction(api.rawg.addGame);
+  const updateGame = useMutation(api.games.updateOwnedGameStores);
+  const ownedGamesInfo = useQuery(api.games.getOwnedGamesInfo);
 
-  const existingIdsSet = useMemo(() => new Set(existingRawgIds), [existingRawgIds]);
+  const ownedGamesMap = useMemo(() => {
+    if (!ownedGamesInfo) return new Map();
+    return new Map(ownedGamesInfo.map(g => [g.rawgId, g]));
+  }, [ownedGamesInfo]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -47,37 +51,48 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
     }
   };
 
-  const handleAddGame = async (gameId: number) => {
-    if (existingIdsSet.has(gameId)) return;
-    setIsAdding(true);
+  const handleGameAction = async (gameId: number) => {
+    setIsSubmitting(true);
+    const isUpdating = ownedGamesMap.has(gameId);
     try {
-      await addGame({ 
-        rawgId: gameId,
-        ownedOnSteam,
-        ownedOnEpic,
-        ownedOnGog,
-      });
-      toast.success("Game added to collection");
+      if (isUpdating) {
+        await updateGame({
+          rawgId: gameId,
+          ownedOnSteam,
+          ownedOnEpic,
+          ownedOnGog,
+        });
+        toast.success("Game updated successfully");
+      } else {
+        await addGame({
+          rawgId: gameId,
+          ownedOnSteam,
+          ownedOnEpic,
+          ownedOnGog,
+        });
+        toast.success("Game added to collection");
+      }
       onGameAdded?.();
       onClose();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      if (errorMessage.includes("already in catalog") || errorMessage.includes("already in your collection")) {
-        toast.error("Game is already in your catalog");
-      } else {
-        toast.error("Failed to add game");
-      }
+      toast.error(isUpdating ? "Failed to update game" : "Failed to add game");
     } finally {
-      setIsAdding(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleGameSelect = (game: Game) => {
     setSelectedGame(game);
-    // Reset store selection when selecting a new game
-    setOwnedOnSteam(false);
-    setOwnedOnEpic(false);
-    setOwnedOnGog(false);
+    const existingGame = ownedGamesMap.get(game.id);
+    if (existingGame) {
+      setOwnedOnSteam(existingGame.ownedOnSteam);
+      setOwnedOnEpic(existingGame.ownedOnEpic);
+      setOwnedOnGog(existingGame.ownedOnGog);
+    } else {
+      setOwnedOnSteam(false);
+      setOwnedOnEpic(false);
+      setOwnedOnGog(false);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -91,7 +106,7 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
         <div className="p-6 border-b">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Add Game to Catalog</h2>
+            <h2 className="text-xl font-semibold">Add or Edit Game</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600"
@@ -123,11 +138,11 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
           {searchResults.length > 0 ? (
             <div className="space-y-4">
               {searchResults.map((game) => {
-                const alreadyAdded = existingIdsSet.has(game.id);
+                const alreadyAdded = ownedGamesMap.has(game.id);
                 return (
                   <div
                     key={game.id}
-                    className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                    className={`flex items-center gap-4 p-4 border rounded-lg ${selectedGame?.id === game.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'}`}
                   >
                     {game.background_image && (
                       <img
@@ -148,7 +163,6 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
                         )}
                       </div>
                       
-                      {/* Store Ownership Selection */}
                       {selectedGame?.id === game.id && (
                         <div className="mt-3 space-y-2">
                           <p className="text-sm font-medium text-gray-700">Owned on:</p>
@@ -187,20 +201,24 @@ export function AddGameModal({ onClose, onGameAdded, existingRawgIds = [] }: Add
                     <div className="flex flex-col gap-2">
                       <button
                         onClick={() => handleGameSelect(game)}
-                        className={`px-3 py-1 text-sm rounded border ${
+                        className={`w-24 text-center px-3 py-1 text-sm rounded border ${
                           selectedGame?.id === game.id
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                            ? 'border-blue-500 bg-blue-100 text-blue-800'
+                            : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
                         }`}
                       >
                         {selectedGame?.id === game.id ? 'Selected' : 'Select'}
                       </button>
                       <button
-                        onClick={() => handleAddGame(game.id)}
-                        disabled={isAdding || alreadyAdded || !selectedGame || selectedGame.id !== game.id}
-                        className={`px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${alreadyAdded ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
+                        onClick={() => handleGameAction(game.id)}
+                        disabled={isSubmitting || !selectedGame || selectedGame.id !== game.id}
+                        className={`w-24 text-center px-4 py-2 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                          alreadyAdded
+                            ? 'bg-green-600 hover:bg-green-700'
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
                       >
-                        {alreadyAdded ? "Added" : (isAdding ? "Adding..." : "Add")}
+                        {isSubmitting ? "Saving..." : (alreadyAdded ? "Update" : "Add")}
                       </button>
                     </div>
                   </div>

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, action, internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -66,16 +67,16 @@ export const getUserGames = query({
       const searchTerm = args.searchTerm.toLowerCase();
       games = games.filter(game => 
         game.name.toLowerCase().includes(searchTerm) ||
-        game.genres.some(genre => genre.toLowerCase().includes(searchTerm)) ||
-        game.platforms.some(platform => platform.toLowerCase().includes(searchTerm))
+        game.genres.some((genre: string) => genre.toLowerCase().includes(searchTerm)) ||
+        game.platforms.some((platform: string) => platform.toLowerCase().includes(searchTerm))
       );
     }
 
     // Apply platform filter
     if (args.platforms && args.platforms.length > 0) {
       games = games.filter(game =>
-        args.platforms!.some(platform =>
-          game.platforms.some(gamePlatform =>
+        args.platforms!.some((platform: string) =>
+          game.platforms.some((gamePlatform: string) =>
             gamePlatform.toLowerCase().includes(platform.toLowerCase())
           )
         )
@@ -85,8 +86,8 @@ export const getUserGames = query({
     // Apply genre filter
     if (args.genres && args.genres.length > 0) {
       games = games.filter(game =>
-        args.genres!.some(genre =>
-          game.genres.some(gameGenre =>
+        args.genres!.some((genre: string) =>
+          game.genres.some((gameGenre: string) =>
             gameGenre.toLowerCase().includes(genre.toLowerCase())
           )
         )
@@ -159,7 +160,7 @@ export const getUserGames = query({
   },
 });
 
-export const getOwnedRawgIds = query({
+export const getOwnedGamesInfo = query({
   args: {},
   handler: async (ctx) => {
     const user = await getLoggedInUser(ctx);
@@ -168,16 +169,22 @@ export const getOwnedRawgIds = query({
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
 
-    if (userGameRelations.length === 0) return [] as number[];
+    if (userGameRelations.length === 0) return [];
 
-    const gameIds = userGameRelations.map((rel) => rel.gameId);
-    const games = await Promise.all(gameIds.map((id) => ctx.db.get(id)));
-    const rawgIds = games
-      .filter((g) => g && typeof g.rawgId === "number")
-      .map((g: any) => g.rawgId as number);
+    const games = await Promise.all(
+      userGameRelations.map(async (rel) => {
+        const game = await ctx.db.get(rel.gameId);
+        return {
+          gameId: rel.gameId,
+          rawgId: game?.rawgId,
+          ownedOnSteam: rel.ownedOnSteam || false,
+          ownedOnEpic: rel.ownedOnEpic || false,
+          ownedOnGog: rel.ownedOnGog || false,
+        };
+      }),
+    );
 
-    // Deduplicate just in case
-    return Array.from(new Set(rawgIds));
+    return games.filter((g) => g.rawgId);
   },
 });
 
@@ -252,37 +259,16 @@ export const addGameToUser = mutation({
       });
     }
 
-    // Check if user already owns this game
-    const existingUserGame = await ctx.db
-      .query("userGames")
-      .withIndex("by_user_and_game", (q) => 
-        q.eq("userId", user._id).eq("gameId", gameId)
-      )
-      .unique();
-
-    if (existingUserGame) {
-      // Update existing ownership with new store flags
-      const updatedOwnedOnSteam = existingUserGame.ownedOnSteam || args.ownedOnSteam || false;
-      const updatedOwnedOnEpic = existingUserGame.ownedOnEpic || args.ownedOnEpic || false;
-      const updatedOwnedOnGog = existingUserGame.ownedOnGog || args.ownedOnGog || false;
-      
-      await ctx.db.patch(existingUserGame._id, {
-        ownedOnSteam: updatedOwnedOnSteam,
-        ownedOnEpic: updatedOwnedOnEpic,
-        ownedOnGog: updatedOwnedOnGog,
-      });
-      
-      return gameId;
-    }
-
-    // Add game to user's collection with store ownership
+    // This mutation should only be called when a user is adding a game to their
+    // collection for the first time. The `manageGame` action handles the logic
+    // of checking if the user already owns the game.
     await ctx.db.insert("userGames", {
       userId: user._id,
       gameId,
       addedAt: Date.now(),
-      ownedOnSteam: args.ownedOnSteam || false,
-      ownedOnEpic: args.ownedOnEpic || false,
-      ownedOnGog: args.ownedOnGog || false,
+      ownedOnSteam: args.ownedOnSteam ?? false,
+      ownedOnEpic: args.ownedOnEpic ?? false,
+      ownedOnGog: args.ownedOnGog ?? false,
     });
 
     return gameId;
@@ -296,8 +282,8 @@ export const removeGameFromUser = mutation({
 
     const userGame = await ctx.db
       .query("userGames")
-      .withIndex("by_user_and_game", (q) => 
-        q.eq("userId", user._id).eq("gameId", args.gameId)
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", user._id).eq("gameId", args.gameId),
       )
       .unique();
 
@@ -306,6 +292,90 @@ export const removeGameFromUser = mutation({
     }
 
     await ctx.db.delete(userGame._id);
+  },
+});
+
+export const updateGameOwnership = internalMutation({
+  args: {
+    userId: v.id("users"),
+    gameId: v.id("games"),
+    ownedOnSteam: v.boolean(),
+    ownedOnEpic: v.boolean(),
+    ownedOnGog: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const userGames = await ctx.db
+      .query("userGames")
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", args.userId).eq("gameId", args.gameId),
+      )
+      .collect();
+
+    if (userGames.length === 0) {
+      // This can happen in a race condition, it's fine to ignore.
+      return;
+    }
+
+    // Handle duplicates: update the first, delete the rest
+    const [firstUserGame, ...otherUserGames] = userGames;
+    for (const other of otherUserGames) {
+      await ctx.db.delete(other._id);
+    }
+
+    await ctx.db.patch(firstUserGame._id, {
+      ownedOnSteam: args.ownedOnSteam,
+      ownedOnEpic: args.ownedOnEpic,
+      ownedOnGog: args.ownedOnGog,
+    });
+  },
+});
+
+export const updateGameOwnershipFromDetail = mutation({
+  args: {
+    gameId: v.id("games"),
+    ownedOnSteam: v.boolean(),
+    ownedOnEpic: v.boolean(),
+    ownedOnGog: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getLoggedInUser(ctx);
+    await ctx.runMutation(internal.games.updateGameOwnership, {
+      userId: user._id,
+      gameId: args.gameId,
+      ownedOnSteam: args.ownedOnSteam,
+      ownedOnEpic: args.ownedOnEpic,
+      ownedOnGog: args.ownedOnGog,
+    });
+  },
+});
+
+export const updateOwnedGameStores = mutation({
+  args: {
+    rawgId: v.number(),
+    ownedOnSteam: v.boolean(),
+    ownedOnEpic: v.boolean(),
+    ownedOnGog: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getLoggedInUser(ctx);
+
+    const game = await ctx.db
+      .query("games")
+      .withIndex("by_rawg_id", (q) => q.eq("rawgId", args.rawgId))
+      .unique();
+
+    if (!game) {
+      throw new Error("Game not found");
+    }
+
+    // Delegate to the main update function
+    await ctx.runMutation(internal.games.updateGameOwnership, {
+      userId: user._id,
+      gameId: game._id,
+      ownedOnSteam: args.ownedOnSteam,
+      ownedOnEpic: args.ownedOnEpic,
+      ownedOnGog: args.ownedOnGog,
+    });
   },
 });
 
@@ -389,9 +459,9 @@ export const getAllPlatforms = query({
     );
 
     const platformSet = new Set<string>();
-    games.forEach(game => {
+    games.forEach((game: any) => {
       if (game) {
-        game.platforms.forEach(platform => platformSet.add(platform));
+        game.platforms.forEach((platform: string) => platformSet.add(platform));
       }
     });
 
@@ -416,9 +486,9 @@ export const getAllGenres = query({
     );
 
     const genreSet = new Set<string>();
-    games.forEach(game => {
+    games.forEach((game: any) => {
       if (game) {
-        game.genres.forEach(genre => genreSet.add(genre));
+        game.genres.forEach((genre: string) => genreSet.add(genre));
       }
     });
 
@@ -467,7 +537,7 @@ export const debugUserGames = query({
       userId: user._id,
       userGameCount: userGameRelations.length,
       gameIds,
-      userGameNames: games.filter(g => g !== null).map(g => g!.name),
+      userGameNames: games.filter((g): g is any => g !== null).map(g => g.name),
     };
   },
 });
