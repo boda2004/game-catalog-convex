@@ -32,7 +32,6 @@ export const Dropdown: React.FC<DropdownProps> = ({
   showSearch = true,
   buttonClassName = "",
 }) => {
-  const panelAlignClass = align === "right" ? "right-0" : "left-0";
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const buttonRef = React.useRef<HTMLButtonElement | null>(null);
   const menuRef = React.useRef<HTMLDivElement | null>(null);
@@ -61,17 +60,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
     const rect = buttonRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
-    const estimatedMenuHeight = 288; // ~w-56 list + header ~ might be taller than ComboBox
-    const verticalGap = 4; // mt-1
-    const openUp = rect.bottom + verticalGap + estimatedMenuHeight > viewportHeight && rect.top > viewportHeight - rect.bottom;
+    const verticalGap = 4; // 4px gap similar to mt-1
 
+    // Decide whether to open upwards based on available space rather than estimated height
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUp = spaceAbove > spaceBelow; // prefer opening up when there's more space above
+
+    // Horizontal alignment
     let left = rect.left;
     if (align === "right") {
       left = Math.max(0, rect.right - rect.width);
     }
     left = Math.min(left, viewportWidth - rect.width);
 
-    const top = openUp ? rect.top - estimatedMenuHeight - verticalGap : rect.bottom + verticalGap;
+    // For drop-up we anchor the top edge to the trigger's top and shift the menu by its full height using translateY(-100%)
+    const top = openUp ? rect.top - verticalGap : rect.bottom + verticalGap;
 
     setMenuStyles({
       position: "fixed",
@@ -79,6 +83,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
       left,
       minWidth: rect.width,
       zIndex: 50,
+      transform: openUp ? "translateY(-100%)" : undefined,
     });
   }, [align]);
 
@@ -110,7 +115,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         <div
           ref={menuRef}
           style={menuStyles}
-          className={`mt-1 bg-white border border-gray-200 rounded shadow z-50`}
+          className={`bg-white border border-gray-200 rounded shadow z-50`}
         >
           <div className="p-2 border-b border-gray-100 flex gap-2 items-center text-sm">
             {showSearch && (

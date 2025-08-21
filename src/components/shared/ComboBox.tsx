@@ -48,32 +48,36 @@ export function ComboBox<V extends string | number = string | number>({
   }, []);
 
   const selectedOption = options.find((o) => o.value === value);
-  const panelAlignClass = align === "right" ? "right-0" : "left-0";
 
   const updateMenuPosition = React.useCallback(() => {
     if (!buttonRef.current) return;
     const rect = buttonRef.current.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
-    const estimatedMenuHeight = 192; // Tailwind max-h-48 (12rem)
-    const verticalGap = 4; // mt-1 approximate (4px)
-    const openUp = rect.bottom + verticalGap + estimatedMenuHeight > viewportHeight && rect.top > viewportHeight - rect.bottom;
+    const verticalGap = 4; // 4px gap similar to mt-1
 
-    // Default align left; if align right, align menu's right edge with button's right edge by shifting left by button width
+    // Decide whether to open upwards based on available space rather than estimated height
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUp = spaceAbove > spaceBelow; // prefer opening up when there's more space above
+
+    // Horizontal alignment
     let left = rect.left;
     if (align === "right") {
       left = Math.max(0, rect.right - rect.width);
     }
-    left = Math.min(left, viewportWidth - rect.width); // ensure within viewport horizontally by default width
+    left = Math.min(left, viewportWidth - rect.width);
 
-    const top = openUp ? rect.top - estimatedMenuHeight - verticalGap : rect.bottom + verticalGap;
+    // For drop-up we anchor the top edge to the trigger's top and shift the menu by its full height using translateY(-100%)
+    const top = openUp ? rect.top - verticalGap : rect.bottom + verticalGap;
 
     setMenuStyles({
       position: "fixed",
       top,
       left,
       minWidth: rect.width,
-      zIndex: 50, // higher than local z-20
+      zIndex: 50,
+      transform: openUp ? "translateY(-100%)" : undefined,
     });
   }, [align]);
 
@@ -105,7 +109,7 @@ export function ComboBox<V extends string | number = string | number>({
         <div
           ref={menuRef}
           style={menuStyles}
-          className={`mt-1 bg-white border border-gray-200 rounded shadow ${menuClassName}`}
+          className={`bg-white border border-gray-200 rounded shadow ${menuClassName}`}
         >
           <div className="max-h-48 overflow-auto py-1 min-w-[var(--trigger-width,auto)]">
             {options.map((opt) => (
