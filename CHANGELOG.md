@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/boda2004/game-catalog-convex/compare/v1.6.0...v1.6.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* **dropdown:** prevent overflow beyond right edge of screen ([#16](https://github.com/boda2004/game-catalog-convex/issues/16)) ([b8d3b96](https://github.com/boda2004/game-catalog-convex/commit/b8d3b96e3c5b6b66f804ff69950b005de26359bf))
+
 ## [1.6.0](https://github.com/boda2004/game-catalog-convex/compare/v1.5.0...v1.6.0) (2025-08-19)
 
 
