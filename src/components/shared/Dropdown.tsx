@@ -64,6 +64,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     const viewportWidth = window.innerWidth;
     const verticalGap = 4; // 4px gap similar to mt-1
     const menuWidth = 224; // w-56 = 224px
+    const screenMargin = 8; // 8px margin from screen edge
 
     // Decide whether to open upwards based on available space rather than estimated height
     const spaceBelow = viewportHeight - rect.bottom;
@@ -78,8 +79,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
 
     // Ensure the menu doesn't extend beyond the right edge of the viewport
     const menuRightEdge = left + menuWidth;
-    if (menuRightEdge > viewportWidth) {
-      left = Math.max(0, viewportWidth - menuWidth);
+    if (menuRightEdge > viewportWidth - screenMargin) {
+      left = Math.max(screenMargin, viewportWidth - menuWidth - screenMargin);
     }
 
     // For drop-up we anchor the top edge to the trigger's top and shift the menu by its full height using translateY(-100%)
