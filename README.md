@@ -24,12 +24,12 @@ The app supports password reset for accounts created with the password provider.
 How it works:
 - On the sign-in form, click "Forgot your password?".
 - Enter your email to request a reset code.
-- Check your email for the code. In development, the code is logged by the Convex backend to the server logs under a line starting with "[Password Reset]".
+- Check your email for the code. For security, reset codes and links are not logged anywhere; you must integrate an email provider to deliver them (see `convex/auth.ts`).
 - Enter the code and your new password in the form to complete the reset.
 
 Notes:
 - Passwords must be at least 8 characters long.
-- For production, replace the development email logging with a real email provider in `convex/auth.ts` (see the `reset` config passed to the `Password` provider).
+- In production (and development), integrate a real email provider in `convex/auth.ts` (see the `reset` config passed to the `Password` provider`).
 
 ## Developing and deploying your app
 

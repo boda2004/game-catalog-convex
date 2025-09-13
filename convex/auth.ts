@@ -7,18 +7,18 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Password({
       id: "password",
-      // Enable password reset using a simple email OTP that logs the code in the Convex logs.
+      // Enable password reset using a simple email OTP. Do not log the reset code.
       // In production, replace `sendVerificationRequest` with your email provider integration.
       reset: {
         id: "password-reset",
         name: "Password Reset",
         type: "email",
         maxAge: 60 * 30, // 30 minutes
-        async sendVerificationRequest({ identifier, token, url, expires }) {
-          console.log(
-            "[Password Reset] Email:", identifier,
-            "\nCode:", token,
-            "\nURL:", url,
+        async sendVerificationRequest({ identifier, /* token, url, */ expires }) {
+          // SECURITY: Do not log the reset code or URL to avoid leaking secrets.
+          // Integrate with your email provider here to deliver the code/link to the user.
+          console.info(
+            "[Password Reset] Verification requested for:", identifier,
             "\nExpires:", expires.toISOString()
           );
         },
