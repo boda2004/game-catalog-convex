@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/boda2004/game-catalog-convex/compare/v1.7.0...v1.8.0) (2025-09-13)
+
+
+### Features
+
+* **auth:** integrate Resend API for password reset emails ([#19](https://github.com/boda2004/game-catalog-convex/issues/19)) ([d4ec559](https://github.com/boda2004/game-catalog-convex/commit/d4ec559678b92a9321c587d41fd68af3da6d4724))
+
 ## [1.7.0](https://github.com/boda2004/game-catalog-convex/compare/v1.6.1...v1.7.0) (2025-09-13)
 
 
