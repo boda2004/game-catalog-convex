@@ -24,12 +24,21 @@ The app supports password reset for accounts created with the password provider.
 How it works:
 - On the sign-in form, click "Forgot your password?".
 - Enter your email to request a reset code.
-- Check your email for the code. For security, reset codes and links are not logged anywhere; you must integrate an email provider to deliver them (see `convex/auth.ts`).
+- Check your email for the code. The server sends the code via the Resend email API (see `convex/auth.ts`).
 - Enter the code and your new password in the form to complete the reset.
+
+Email setup (required):
+- Create a Resend account and get an API key: https://resend.com/
+- Configure these environment variables for Convex (locally and in production):
+  - RESEND_API_KEY
+  - EMAIL_FROM (e.g. "Game Catalog <no-reply@example.com>")
+  - EMAIL_SUBJECT (optional, default: "Your password reset code")
+  - EMAIL_REPLY_TO (optional)
 
 Notes:
 - Passwords must be at least 8 characters long.
-- In production (and development), integrate a real email provider in `convex/auth.ts` (see the `reset` config passed to the `Password` provider`).
+- Reset codes and links are not logged anywhere by the server.
+- If email is not configured, starting a password reset will fail with a clear error.
 
 ## Developing and deploying your app
 
