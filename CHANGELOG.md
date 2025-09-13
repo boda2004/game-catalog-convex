@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/boda2004/game-catalog-convex/compare/v1.6.1...v1.7.0) (2025-09-13)
+
+
+### Features
+
+* **auth:** add password reset functionality ([ac1bf95](https://github.com/boda2004/game-catalog-convex/commit/ac1bf9580b85b1d23f04b91526a3582c1dc58be5))
+
 ## [1.6.1](https://github.com/boda2004/game-catalog-convex/compare/v1.6.0...v1.6.1) (2025-08-21)
 
 
