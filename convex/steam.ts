@@ -78,13 +78,9 @@ export const importOwnedGames = action({
     const ownedGames: Array<SteamOwnedGame> = ownedJson?.response?.games || [];
 
     let filtered = ownedGames
-      .filter((g) => g.name && g.name.trim().length > 0)
-      .filter((g) => (args.minPlaytimeMinutes ? (g.playtime_forever || 0) >= args.minPlaytimeMinutes! : true));
+      .filter((g) => g.name && g.name.trim().length > 0);
 
-    // Optional limit to avoid exceeding RAWG rate limits
-    if (args.limit && args.limit > 0) {
-      filtered = filtered.slice(0, args.limit);
-    }
+    // Removed minPlaytimeMinutes and limit filtering to import all Steam games
 
     // Deduplicate by name
     const seen = new Set<string>();

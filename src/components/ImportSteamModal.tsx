@@ -17,8 +17,6 @@ interface ImportSteamModalProps {
 
 export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps) {
   const [steamIdOrUrl, setSteamIdOrUrl] = useState("");
-  const [minPlaytime, setMinPlaytime] = useState<number | "">(0);
-  const [limit, setLimit] = useState<number | "">(50);
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -34,12 +32,10 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
     if (!steamIdOrUrl.trim()) return;
     setIsImporting(true);
     try {
-      const createdJobId = await createImportJob({ type: "steam", total: typeof limit === "number" ? limit : 0 });
+      const createdJobId = await createImportJob({ type: "steam", total: 0 });
       setJobId(createdJobId as any);
       const res: ImportResult[] = await importOwnedGames({
         steamIdOrProfileUrl: steamIdOrUrl.trim(),
-        minPlaytimeMinutes: typeof minPlaytime === "number" ? minPlaytime : undefined,
-        limit: typeof limit === "number" ? limit : undefined,
         jobId: createdJobId as any,
       });
       setResults(res);
@@ -66,7 +62,7 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
           </div>
           <p className="text-gray-600">
-            Import your owned Steam games by entering your SteamID64 or Steam profile URL. Optionally filter by minimum playtime and limit the number of games to import.
+            Import your owned Steam games by entering your SteamID64 or Steam profile URL. <b>All games from your account will be imported. No filters or limits are applied.</b>
           </p>
         </div>
 
@@ -80,29 +76,6 @@ export function ImportSteamModal({ onClose, onImported }: ImportSteamModalProps)
               placeholder="https://steamcommunity.com/id/yourname or 7656119XXXXXXXXXX"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Min playtime (minutes)</label>
-              <input
-                type="number"
-                min={0}
-                value={minPlaytime}
-                onChange={(e) => setMinPlaytime(e.target.value === "" ? "" : Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Limit</label>
-              <input
-                type="number"
-                min={1}
-                value={limit}
-                onChange={(e) => setLimit(e.target.value === "" ? "" : Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
           </div>
 
           {results.length > 0 && (
