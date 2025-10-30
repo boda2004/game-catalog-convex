@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/boda2004/game-catalog-convex/compare/v1.8.0...v1.9.0) (2025-10-30)
+
+
+### Features
+
+* removed limit and filter for steam import ([4f51b96](https://github.com/boda2004/game-catalog-convex/commit/4f51b96b9d76c167778fdc8f249a3615763f5149))
+
 ## [1.8.0](https://github.com/boda2004/game-catalog-convex/compare/v1.7.0...v1.8.0) (2025-09-13)
 
 
