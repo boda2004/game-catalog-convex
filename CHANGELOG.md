@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/boda2004/game-catalog-convex/compare/v1.10.0...v1.11.0) (2026-02-21)
+
+
+### Features
+
+* allow game name column in table to wrap text by conditionally applying `whitespace-nowrap`. ([40e6eea](https://github.com/boda2004/game-catalog-convex/commit/40e6eead01566f775f0712cfddbf1679c01b37ce))
+
 ## [1.10.0](https://github.com/boda2004/game-catalog-convex/compare/v1.9.0...v1.10.0) (2026-02-21)
 
 
