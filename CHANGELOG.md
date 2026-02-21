@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.0](https://github.com/boda2004/game-catalog-convex/compare/v1.9.0...v1.10.0) (2026-02-21)
+
+
+### Features
+
+* Implement modal close functionality via Escape key and backdrop click for all modals. ([35e4512](https://github.com/boda2004/game-catalog-convex/commit/35e451275175563ab3e94140b5c618f3b1020820))
+
 ## [1.9.0](https://github.com/boda2004/game-catalog-convex/compare/v1.8.0...v1.9.0) (2025-10-30)
 
 
