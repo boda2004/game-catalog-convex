@@ -9,26 +9,35 @@ import { PaginationControls } from "./PaginationControls";
 import { AddGameModal } from "./AddGameModal";
 import { BulkAddModal } from "./BulkAddModal";
 import { ImportSteamModal } from "./ImportSteamModal";
-import { useDebounce } from "../lib/hooks";
+import { useGameFilters } from "../lib/useGameFilters";
 
 export function GameCatalog() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [isFetching, setIsFetching] = useState(true);
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedStores, setSelectedStores] = useState<("steam" | "epic" | "gog")[]>([]);
-  const [sortBy, setSortBy] = useState("userAddedAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [currentPage, setCurrentPage] = useState(1);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showBulkAddModal, setShowBulkAddModal] = useState(false);
   const [showImportSteamModal, setShowImportSteamModal] = useState(false);
 
   const preferences = useQuery(api.games.getUserPreferences);
   const updateUserPreferences = useMutation(api.games.updateUserPreferences);
-
   const itemsPerPage = preferences?.itemsPerPage || 12;
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    selectedPlatforms,
+    selectedGenres,
+    selectedStores,
+    sortBy,
+    sortOrder,
+    currentPage,
+    setCurrentPage,
+    handlePlatformToggle,
+    handleGenreToggle,
+    handleStoreToggle,
+    handleClearFilters,
+    handleSortChange
+  } = useGameFilters(itemsPerPage);
 
   const gamesData = useQuery(api.games.getUserGames, {
     searchTerm: debouncedSearchTerm || undefined,
@@ -58,41 +67,7 @@ export function GameCatalog() {
   }, [gamesData]);
 
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [debouncedSearchTerm, JSON.stringify(selectedPlatforms), JSON.stringify(selectedGenres), JSON.stringify(selectedStores), sortBy, sortOrder, preferences?.itemsPerPage]);
 
-  const handlePlatformToggle = useCallback((platform: string) => {
-    setSelectedPlatforms(prev =>
-      prev.includes(platform)
-        ? prev.filter(p => p !== platform)
-        : [...prev, platform]
-    );
-  }, []);
-
-  const handleGenreToggle = useCallback((genre: string) => {
-    setSelectedGenres(prev =>
-      prev.includes(genre)
-        ? prev.filter(g => g !== genre)
-        : [...prev, genre]
-    );
-  }, []);
-
-  const handleStoreToggle = useCallback((store: string) => {
-    setSelectedStores(prev =>
-      prev.includes(store as "steam" | "epic" | "gog")
-        ? prev.filter(s => s !== store)
-        : [...prev, store as "steam" | "epic" | "gog"]
-    );
-  }, []);
-
-  const handleClearFilters = useCallback(() => {
-    setSearchTerm("");
-    setSelectedPlatforms([]);
-    setSelectedGenres([]);
-    setSelectedStores([]);
-  }, []);
 
   const handleViewModeChange = useCallback((mode: "grid" | "table") => {
     updateUserPreferences({ viewMode: mode });
@@ -102,10 +77,7 @@ export function GameCatalog() {
     updateUserPreferences({ itemsPerPage: count });
   }, [updateUserPreferences]);
 
-  const handleSortChange = useCallback((field: string, order: "asc" | "desc") => {
-    setSortBy(field);
-    setSortOrder(order);
-  }, []);
+
 
   const handleToggleFieldVisibility = useCallback((field: string) => {
     if (!preferences) return;

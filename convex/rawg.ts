@@ -3,7 +3,7 @@ import { action } from "./_generated/server";
 import { internal, api } from "./_generated/api";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
-import { rawgFetchWithRetry } from "./rawgClient";
+import { rawgFetchWithRetry, fetchAndNormalizeRawgGame, searchAndNormalizeRawgGame } from "./rawgClient";
 
 // RAWG API integration actions
 export const searchGamesPublic = action({
@@ -40,36 +40,7 @@ export const addGame = action({
       throw new Error("RAWG API key not configured");
     }
 
-    // Fetch game details from RAWG
-    const response = await rawgFetchWithRetry(
-      `https://api.rawg.io/api/games/${args.rawgId}?key=${apiKey}`
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch game details");
-    }
-
-    const gameData = await response.json();
-
-    // Transform RAWG data to our format with null -> undefined normalization
-    const gameInfo = {
-      rawgId: gameData.id,
-      name: gameData.name,
-      slug: gameData.slug,
-      backgroundImage: gameData.background_image ?? undefined,
-      released: gameData.released ?? undefined,
-      rating: typeof gameData.rating === "number" ? gameData.rating : undefined,
-      metacritic: typeof gameData.metacritic === "number" ? gameData.metacritic : undefined,
-      platforms: gameData.platforms?.map((p: any) => p.platform.name) || [],
-      genres: gameData.genres?.map((g: any) => g.name) || [],
-      developers: gameData.developers?.map((d: any) => d.name) || [],
-      publishers: gameData.publishers?.map((p: any) => p.name) || [],
-      esrbRating: gameData.esrb_rating?.name ?? undefined,
-      playtime: typeof gameData.playtime === "number" ? gameData.playtime : undefined,
-      description: gameData.description_raw ?? undefined,
-      website: gameData.website ?? undefined,
-      tags: gameData.tags?.map((t: any) => t.name) || [],
-    };
+    const gameInfo = await fetchAndNormalizeRawgGame(args.rawgId, apiKey);
 
     // Get the current user
     const userId = await getAuthUserId(ctx);
@@ -156,56 +127,7 @@ export const addGamesByNames = action({
 
     for (const gameName of args.gameNames) {
       try {
-        // Search for the game
-        const searchResponse = await rawgFetchWithRetry(
-          `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(gameName)}&page_size=1`
-        );
-
-        if (!searchResponse.ok) {
-          results.push({ name: gameName, success: false, error: "Search failed" });
-          continue;
-        }
-
-        const searchData = await searchResponse.json();
-        const game = searchData.results?.[0];
-
-        if (!game) {
-          results.push({ name: gameName, success: false, error: "Game not found" });
-          continue;
-        }
-
-        // Get detailed game info
-        const detailResponse = await rawgFetchWithRetry(
-          `https://api.rawg.io/api/games/${game.id}?key=${apiKey}`
-        );
-
-        if (!detailResponse.ok) {
-          results.push({ name: gameName, success: false, error: "Failed to get details" });
-          continue;
-        }
-
-        const gameData = await detailResponse.json();
-
-        // Transform and add game with null -> undefined normalization
-        const gameInfo = {
-          rawgId: gameData.id,
-          name: gameData.name,
-          slug: gameData.slug,
-          backgroundImage: gameData.background_image ?? undefined,
-          released: gameData.released ?? undefined,
-          rating: typeof gameData.rating === "number" ? gameData.rating : undefined,
-          metacritic: typeof gameData.metacritic === "number" ? gameData.metacritic : undefined,
-          platforms: gameData.platforms?.map((p: any) => p.platform.name) || [],
-          genres: gameData.genres?.map((g: any) => g.name) || [],
-          developers: gameData.developers?.map((d: any) => d.name) || [],
-          publishers: gameData.publishers?.map((p: any) => p.name) || [],
-          esrbRating: gameData.esrb_rating?.name ?? undefined,
-          playtime: typeof gameData.playtime === "number" ? gameData.playtime : undefined,
-          description: gameData.description_raw ?? undefined,
-          website: gameData.website ?? undefined,
-          tags: gameData.tags?.map((t: any) => t.name) || [],
-        };
-
+        const gameInfo = await searchAndNormalizeRawgGame(gameName, apiKey);
         const outcome: { gameId: Id<"games">; alreadyOwned: boolean } = await ctx.runMutation(
           internal.gamesInternal.addGameToUserInternal,
           {
@@ -219,7 +141,7 @@ export const addGamesByNames = action({
         results.push({
           name: gameName,
           success: true,
-          addedName: gameData.name,
+          addedName: gameInfo.name,
           alreadyOwned: Boolean(outcome?.alreadyOwned),
         });
 

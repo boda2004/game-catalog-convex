@@ -73,4 +73,49 @@ export async function rawgFetchWithRetry(
   }
 }
 
+export function normalizeRawgData(gameData: any) {
+  return {
+    rawgId: gameData.id as number,
+    name: gameData.name as string,
+    slug: gameData.slug as string,
+    backgroundImage: (gameData.background_image ?? undefined) as string | undefined,
+    released: (gameData.released ?? undefined) as string | undefined,
+    rating: (typeof gameData.rating === "number" ? gameData.rating : undefined) as number | undefined,
+    metacritic: (typeof gameData.metacritic === "number" ? gameData.metacritic : undefined) as number | undefined,
+    platforms: (gameData.platforms?.map((p: any) => p.platform.name) as Array<string>) || [],
+    genres: (gameData.genres?.map((g: any) => g.name) as Array<string>) || [],
+    developers: (gameData.developers?.map((d: any) => d.name) as Array<string>) || [],
+    publishers: (gameData.publishers?.map((p: any) => p.name) as Array<string>) || [],
+    esrbRating: ((gameData.esrb_rating?.name ?? undefined) as string | undefined),
+    playtime: ((typeof gameData.playtime === "number" ? gameData.playtime : undefined) as number | undefined),
+    description: (gameData.description_raw ?? undefined) as string | undefined,
+    website: (gameData.website ?? undefined) as string | undefined,
+    tags: (gameData.tags?.map((t: any) => t.name) as Array<string>) || [],
+  };
+}
+
+export async function fetchAndNormalizeRawgGame(rawgId: number, apiKey: string) {
+  const detailResponse = await rawgFetchWithRetry(`https://api.rawg.io/api/games/${rawgId}?key=${apiKey}`);
+  if (!detailResponse.ok) {
+    throw new Error("Failed to get details");
+  }
+  const gameData = await detailResponse.json();
+  return normalizeRawgData(gameData);
+}
+
+export async function searchAndNormalizeRawgGame(gameName: string, apiKey: string) {
+  const searchResponse = await rawgFetchWithRetry(
+    `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(gameName)}&page_size=1`
+  );
+  if (!searchResponse.ok) {
+    throw new Error("Search failed");
+  }
+  const searchData = await searchResponse.json();
+  const game = searchData.results?.[0];
+  if (!game) {
+    throw new Error("Game not found");
+  }
+  return await fetchAndNormalizeRawgGame(game.id, apiKey);
+}
+
 
