@@ -509,7 +509,7 @@ export function GameTable({
                   onClick={() => setSelectedGameId(game._id)}
                 >
                   {visibleFields.map((field) => (
-                    <td key={field} className="px-6 py-4 whitespace-nowrap">
+                    <td key={field} className={`px-6 py-4 ${field !== "name" ? "whitespace-nowrap" : ""}`}>
                       {renderCell(game, field)}
                     </td>
                   ))}
