@@ -149,7 +149,7 @@ export function GameTable({
       case "name":
         return (
           <div className="flex items-center gap-3">
-            <div className="w-12 h-8 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+            <div className="w-12 h-8 bg-gray-200 rounded-sm overflow-hidden shrink-0">
               {game.backgroundImage ? (
                 <img
                   src={game.backgroundImage}
@@ -190,7 +190,7 @@ export function GameTable({
               );
             })}
             {game.platforms.length > 2 && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
                 +{game.platforms.length - 2}
               </span>
             )}
@@ -219,7 +219,7 @@ export function GameTable({
               );
             })}
             {game.genres.length > 2 && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
                 +{game.genres.length - 2}
               </span>
             )}
@@ -229,17 +229,17 @@ export function GameTable({
         return (
           <div className="flex flex-wrap gap-1">
             {game.ownedOnSteam && (
-              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+              <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-sm text-xs font-medium">
                 Steam
               </span>
             )}
             {game.ownedOnEpic && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-sm text-xs font-medium">
                 Epic Games
               </span>
             )}
             {game.ownedOnGog && (
-              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+              <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-sm text-xs font-medium">
                 GOG
               </span>
             )}
@@ -261,7 +261,7 @@ export function GameTable({
         );
       case "metacritic":
         return game.metacritic ? (
-          <div className="inline-flex items-center px-2 py-1 rounded text-sm font-semibold bg-green-100 text-green-800">
+          <div className="inline-flex items-center px-2 py-1 rounded-sm text-sm font-semibold bg-green-100 text-green-800">
             {game.metacritic}
           </div>
         ) : (
@@ -368,7 +368,7 @@ export function GameTable({
             <div className="flex rounded-md border border-gray-300">
               <button
                 onClick={() => onViewModeChange("grid")}
-                className={`px-3 py-1 text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`px-3 py-1 text-sm rounded-l-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
                   viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
                 }`}
               >
@@ -376,7 +376,7 @@ export function GameTable({
               </button>
               <button
                 onClick={() => onViewModeChange("table")}
-                className={`px-3 py-1 text-sm rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`px-3 py-1 text-sm rounded-r-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
                   viewMode === "table" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
                 }`}
               >
@@ -425,7 +425,7 @@ export function GameTable({
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">

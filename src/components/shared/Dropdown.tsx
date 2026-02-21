@@ -115,7 +115,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         type="button"
         onClick={() => setOpen((v) => !v)}
         ref={buttonRef}
-        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white ${buttonClassName}`}
+        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white ${buttonClassName}`}
       >
         <span>{count ? `${label} (${count})` : label}</span>
         <span className="ml-1.5 text-[10px] text-gray-500">
@@ -128,7 +128,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
           <div
             ref={menuRef}
             style={menuStyles}
-            className={`bg-white border border-gray-200 rounded shadow z-50`}
+            className={`bg-white border border-gray-200 rounded-sm shadow-sm z-50`}
           >
             <div className="p-2 border-b border-gray-100 flex gap-2 items-center text-sm">
               {showSearch && (
@@ -136,7 +136,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                   value={query}
                   onChange={(e) => setQuery && setQuery(e.target.value)}
                   placeholder={placeholder}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
                 />
               )}
               <button
@@ -145,7 +145,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                   selected.forEach((v) => onToggle(v));
                   setQuery && setQuery("");
                 }}
-                className="text-xs px-2 py-1 border rounded hover:bg-gray-50"
+                className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50"
               >
                 Clear
               </button>

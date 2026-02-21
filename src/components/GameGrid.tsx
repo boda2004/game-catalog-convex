@@ -160,7 +160,7 @@ export function GameGrid({
             <div className="flex rounded-md border border-gray-300">
               <button
                 onClick={() => onViewModeChange("grid")}
-                className={`px-3 py-1 text-sm rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`px-3 py-1 text-sm rounded-l-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
                   viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
                 }`}
               >
@@ -168,7 +168,7 @@ export function GameGrid({
               </button>
               <button
                 onClick={() => onViewModeChange("table")}
-                className={`px-3 py-1 text-sm rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`px-3 py-1 text-sm rounded-r-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
                   viewMode === "table" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
                 }`}
               >
@@ -195,13 +195,13 @@ export function GameGrid({
             <button
               type="button"
               onClick={() => setSortOpen((v) => !v)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white"
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white"
             >
               <span>{sortLabelMap[sortBy] ?? sortBy}</span>
               <span className="text-xs text-gray-500">{sortOpen ? "▲" : "▼"}</span>
             </button>
             {sortOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
                 <div className="max-h-48 overflow-auto py-1">
                   {Object.entries(sortLabelMap).map(([value, label]) => (
                     <button
@@ -227,7 +227,7 @@ export function GameGrid({
           </div>
           <button
             onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
-            className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
           >
             {sortOrder === "asc" ? "↑" : "↓"}
           </button>
@@ -236,20 +236,20 @@ export function GameGrid({
         {/* Platforms and Genres controls */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64" ref={platformRef}>
-            <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+            <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
               <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
               <span className="text-xs text-gray-500">{platformOpen ? "▲" : "▼"}</span>
             </button>
             {platformOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
                 <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
                   <input
                     value={platformQuery}
                     onChange={(e) => setPlatformQuery(e.target.value)}
                     placeholder="Filter platforms..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
                   />
-                  <button type="button" onClick={clearPlatforms} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                  <button type="button" onClick={clearPlatforms} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
                 </div>
                 <div className="max-h-48 overflow-auto">
                   {filteredPlatforms.length === 0 && (
@@ -270,20 +270,20 @@ export function GameGrid({
             )}
           </div>
           <div className="relative w-64" ref={genreRef}>
-            <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+            <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
               <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
               <span className="text-xs text-gray-500">{genreOpen ? "▲" : "▼"}</span>
             </button>
             {genreOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
                 <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
                   <input
                     value={genreQuery}
                     onChange={(e) => setGenreQuery(e.target.value)}
                     placeholder="Filter genres..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
                   />
-                  <button type="button" onClick={clearGenres} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                  <button type="button" onClick={clearGenres} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
                 </div>
                 <div className="max-h-48 overflow-auto">
                   {filteredGenres.length === 0 && (
@@ -304,20 +304,20 @@ export function GameGrid({
             )}
           </div>
           <div className="relative w-64" ref={storeRef}>
-            <button type="button" onClick={() => setStoreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white">
+            <button type="button" onClick={() => setStoreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
               <span>{selectedStores.length ? `Stores (${selectedStores.length})` : "Stores"}</span>
               <span className="text-xs text-gray-500">{storeOpen ? "▲" : "▼"}</span>
             </button>
             {storeOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow z-10">
+              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
                 <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
                   <input
                     value={storeQuery}
                     onChange={(e) => setStoreQuery(e.target.value)}
                     placeholder="Filter stores..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
                   />
-                  <button type="button" onClick={clearStores} className="text-xs px-2 py-1 border rounded hover:bg-gray-50">Clear</button>
+                  <button type="button" onClick={clearStores} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
                 </div>
                 <div className="max-h-48 overflow-auto">
                   {filteredStores.length === 0 && (
@@ -362,7 +362,7 @@ export function GameGrid({
                 </div>
               )}
               {game.rating && (
-                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-sm font-semibold flex items-center gap-1">
+                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-sm text-sm font-semibold flex items-center gap-1">
                   <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -403,7 +403,7 @@ export function GameGrid({
                     );
                   })}
                   {game.platforms.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
                       +{game.platforms.length - 3}
                     </span>
                   )}
@@ -433,7 +433,7 @@ export function GameGrid({
                     );
                   })}
                   {game.genres.length > 2 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
                       +{game.genres.length - 2}
                     </span>
                   )}
@@ -445,17 +445,17 @@ export function GameGrid({
                 <div className="mt-3">
                   <div className="flex flex-wrap gap-1">
                     {game.ownedOnSteam && (
-                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs font-medium">
+                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-sm text-xs font-medium">
                         Steam
                       </span>
                     )}
                     {game.ownedOnEpic && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-sm text-xs font-medium">
                         Epic Games
                       </span>
                     )}
                     {game.ownedOnGog && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-sm text-xs font-medium">
                         GOG
                       </span>
                     )}

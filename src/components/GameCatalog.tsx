@@ -101,7 +101,7 @@ export function GameCatalog() {
   return (
     <div className="space-y-6">
       {/* Header Actions */}
-      <div className="bg-white border rounded-lg shadow-sm p-4 sm:p-5">
+      <div className="bg-white border rounded-lg shadow-xs p-4 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-3">

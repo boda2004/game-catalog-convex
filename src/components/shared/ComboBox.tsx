@@ -100,7 +100,7 @@ export function ComboBox<V extends string | number = string | number>({
         type="button"
         onClick={() => setIsOpen((v) => !v)}
         ref={buttonRef}
-        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded flex items-center justify-between bg-white ${buttonClassName}`}
+        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white ${buttonClassName}`}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
         <span className="text-xs text-gray-500 ml-2">{isOpen ? "▲" : "▼"}</span>
@@ -109,9 +109,9 @@ export function ComboBox<V extends string | number = string | number>({
         <div
           ref={menuRef}
           style={menuStyles}
-          className={`bg-white border border-gray-200 rounded shadow ${menuClassName}`}
+          className={`bg-white border border-gray-200 rounded-sm shadow-sm ${menuClassName}`}
         >
-          <div className="max-h-48 overflow-auto py-1 min-w-[var(--trigger-width,auto)]">
+          <div className="max-h-48 overflow-auto py-1 min-w-(--trigger-width,auto)">
             {options.map((opt) => (
               <button
                 key={String(opt.value)}

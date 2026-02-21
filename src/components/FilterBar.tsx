@@ -27,7 +27,7 @@ const FilterBarInternal = ({
     selectedPlatforms.length > 0 || selectedGenres.length > 0 || selectedStores.length > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4 sm:p-5 space-y-3">
+    <div className="bg-white rounded-lg shadow-xs border p-4 sm:p-5 space-y-3">
       {/* Search */}
       <div>
         <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -45,7 +45,7 @@ const FilterBarInternal = ({
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-9 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full pl-10 pr-9 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-hidden focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
           />
           {searchTerm.length > 0 && (
             <button

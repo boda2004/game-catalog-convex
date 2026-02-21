@@ -135,7 +135,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Search for a game..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
             <button
               onClick={handleSearch}
@@ -161,7 +161,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
                       <img
                         src={game.background_image}
                         alt={game.name}
-                        className="w-16 h-16 object-cover rounded"
+                        className="w-16 h-16 object-cover rounded-sm"
                       />
                     )}
                     <div className="flex-1">
@@ -185,7 +185,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
                                 type="checkbox"
                                 checked={ownedOnSteam}
                                 onChange={(e) => setOwnedOnSteam(e.target.checked)}
-                                className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                                className="rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500"
                               />
                               <span className="text-sm text-gray-700">Steam</span>
                             </label>
@@ -194,7 +194,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
                                 type="checkbox"
                                 checked={ownedOnEpic}
                                 onChange={(e) => setOwnedOnEpic(e.target.checked)}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="rounded-sm border-gray-300 text-blue-600 focus:ring-blue-500"
                               />
                               <span className="text-sm text-gray-700">Epic Games</span>
                             </label>
@@ -203,7 +203,7 @@ export function AddGameModal({ onClose, onGameAdded }: AddGameModalProps) {
                                 type="checkbox"
                                 checked={ownedOnGog}
                                 onChange={(e) => setOwnedOnGog(e.target.checked)}
-                                className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                                className="rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
                               />
                               <span className="text-sm text-gray-700">GOG</span>
                             </label>

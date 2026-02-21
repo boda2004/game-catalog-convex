@@ -8,7 +8,7 @@ import { GameCatalog } from "./components/GameCatalog";
 export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xs h-16 flex justify-between items-center border-b shadow-xs px-4">
         <h2 className="text-xl font-semibold text-primary">Game Catalog</h2>
         <Authenticated>
           <SignOutButton />
@@ -17,7 +17,7 @@ export default function App() {
       <main className="flex-1 p-4">
         <Content />
       </main>
-      <footer className="border-t bg-white/70 backdrop-blur-sm text-xs text-gray-600 px-4 py-3 flex items-center justify-between">
+      <footer className="border-t bg-white/70 backdrop-blur-xs text-xs text-gray-600 px-4 py-3 flex items-center justify-between">
         <span>© {new Date().getFullYear()} Game Catalog</span>
         <span>v{__APP_VERSION__}</span>
       </footer>

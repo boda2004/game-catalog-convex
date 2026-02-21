@@ -140,7 +140,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
               onChange={(e) => setGameNames(e.target.value)}
               placeholder="Enter game names, one per line:&#10;The Witcher 3&#10;Cyberpunk 2077&#10;Red Dead Redemption 2"
               rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -155,7 +155,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
                   type="checkbox"
                   checked={ownedOnSteam}
                   onChange={(e) => setOwnedOnSteam(e.target.checked)}
-                  className="rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+                  className="rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500"
                 />
                 <span className="text-sm text-gray-700">Steam</span>
               </label>
@@ -164,7 +164,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
                   type="checkbox"
                   checked={ownedOnEpic}
                   onChange={(e) => setOwnedOnEpic(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded-sm border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="text-sm text-gray-700">Epic Games</span>
               </label>
@@ -173,7 +173,7 @@ export function BulkAddModal({ onClose, onGamesAdded }: BulkAddModalProps) {
                   type="checkbox"
                   checked={ownedOnGog}
                   onChange={(e) => setOwnedOnGog(e.target.checked)}
-                  className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                  className="rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500"
                 />
                 <span className="text-sm text-gray-700">GOG</span>
               </label>

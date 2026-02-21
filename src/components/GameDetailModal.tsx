@@ -97,7 +97,7 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
               className="w-full h-full object-cover"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
           <div className="absolute top-4 right-4">
             <button
               onClick={onClose}
@@ -123,7 +123,7 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
                 </div>
               )}
               {game.metacritic && (
-                <div className="bg-green-600 px-2 py-1 rounded text-sm font-semibold">
+                <div className="bg-green-600 px-2 py-1 rounded-sm text-sm font-semibold">
                   {game.metacritic}
                 </div>
               )}
@@ -184,7 +184,7 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
                     {game.tags.slice(0, 10).map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-sm"
+                        className="px-2 py-1 bg-gray-100 text-gray-700 rounded-sm text-sm"
                       >
                         {tag}
                       </span>
@@ -256,15 +256,15 @@ export function GameDetailModal({ gameId, onClose }: GameDetailModalProps) {
                 {isEditingStores ? (
                   <div className="space-y-2">
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={ownedOnSteam} onChange={(e) => setOwnedOnSteam(e.target.checked)} className="rounded border-gray-300 text-orange-600 focus:ring-orange-500" />
+                      <input type="checkbox" checked={ownedOnSteam} onChange={(e) => setOwnedOnSteam(e.target.checked)} className="rounded-sm border-gray-300 text-orange-600 focus:ring-orange-500" />
                       <span>Steam</span>
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={ownedOnEpic} onChange={(e) => setOwnedOnEpic(e.target.checked)} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                      <input type="checkbox" checked={ownedOnEpic} onChange={(e) => setOwnedOnEpic(e.target.checked)} className="rounded-sm border-gray-300 text-blue-600 focus:ring-blue-500" />
                       <span>Epic Games</span>
                     </label>
                     <label className="flex items-center gap-2">
-                      <input type="checkbox" checked={ownedOnGog} onChange={(e) => setOwnedOnGog(e.target.checked)} className="rounded border-gray-300 text-purple-600 focus:ring-purple-500" />
+                      <input type="checkbox" checked={ownedOnGog} onChange={(e) => setOwnedOnGog(e.target.checked)} className="rounded-sm border-gray-300 text-purple-600 focus:ring-purple-500" />
                       <span>GOG</span>
                     </label>
                     <div className="flex gap-2 pt-2">
