@@ -15,6 +15,7 @@ export interface DropdownProps {
   align?: "left" | "right";
   showSearch?: boolean;
   buttonClassName?: string;
+  getItemLabel?: (value: string) => string;
 }
 
 export const Dropdown: React.FC<DropdownProps> = ({
@@ -31,6 +32,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
   align = "left",
   showSearch = true,
   buttonClassName = "",
+  getItemLabel = (value) => value,
 }) => {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const buttonRef = React.useRef<HTMLButtonElement | null>(null);
@@ -168,7 +170,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                     selected.includes(v) ? "bg-blue-50 text-blue-700" : ""
                   }`}
                 >
-                  {v}
+                  {getItemLabel(v)}
                 </button>
               ))}
             </div>

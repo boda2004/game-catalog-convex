@@ -5,6 +5,14 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Dropdown } from "./shared/Dropdown";
 import { ComboBox } from "./shared/ComboBox";
+import type { FilterStore } from "../lib/useGameFilters";
+
+const storeLabels: Record<FilterStore, string> = {
+  steam: "Steam",
+  epic: "Epic Games",
+  gog: "GOG",
+  no_store: "No store",
+};
 
 interface Game {
   _id: Id<"games">;
@@ -28,10 +36,10 @@ interface GameTableProps {
   visibleFields: string[];
   selectedPlatforms: string[];
   selectedGenres: string[];
-  selectedStores: ("steam" | "epic" | "gog")[];
+  selectedStores: FilterStore[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
-  onStoreToggle: (store: "steam" | "epic" | "gog") => void;
+  onStoreToggle: (store: FilterStore) => void;
   sortBy: string;
   sortOrder: "asc" | "desc";
   onSortChange: (field: string, order: "asc" | "desc") => void;
@@ -353,7 +361,7 @@ export function GameTable({
   };
 
   const handleStoreToggle = (store: string) => {
-    if (store === "steam" || store === "epic" || store === "gog") {
+    if (store === "steam" || store === "epic" || store === "gog" || store === "no_store") {
       onStoreToggle(store);
     }
   };
@@ -492,6 +500,7 @@ export function GameTable({
                               onToggle={handleStoreToggle}
                               selected={selectedStores}
                               placeholder="Filter stores..."
+                              getItemLabel={(store) => storeLabels[store as FilterStore] ?? store}
                             />
                           )}
                         </div>

@@ -1,9 +1,9 @@
-import { Id } from "../../convex/_generated/dataModel";
-import { GameDetailModal } from "./GameDetailModal";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "convex/react";
-import { ComboBox } from "./shared/ComboBox";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
+import { ComboBox } from "./shared/ComboBox";
+import { GameDetailModal } from "./GameDetailModal";
 
 interface Game {
   _id: Id<"games">;
@@ -37,12 +37,41 @@ interface GameGridProps {
   viewMode: "grid" | "table";
 }
 
-export function GameGrid({ 
-  games, 
-  selectedPlatforms, 
-  selectedGenres, 
+const sortLabelMap: Record<string, string> = {
+  userAddedAt: "Date Added",
+  name: "Name",
+  rating: "Rating",
+  metacritic: "Metacritic",
+  released: "Release Date",
+};
+
+const storeLabels: Record<string, string> = {
+  steam: "Steam",
+  epic: "Epic Games",
+  gog: "GOG",
+  no_store: "No store",
+};
+
+function Caret({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`size-4 text-[#767682] transition-transform ${open ? "rotate-180" : ""}`}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+export function GameGrid({
+  games,
+  selectedPlatforms,
+  selectedGenres,
   selectedStores,
-  onPlatformToggle, 
+  onPlatformToggle,
   onGenreToggle,
   onStoreToggle,
   sortBy,
@@ -54,6 +83,13 @@ export function GameGrid({
   viewMode,
 }: GameGridProps) {
   const [selectedGameId, setSelectedGameId] = useState<Id<"games"> | null>(null);
+  const [platformQuery, setPlatformQuery] = useState("");
+  const [genreQuery, setGenreQuery] = useState("");
+  const [storeQuery, setStoreQuery] = useState("");
+  const [platformOpen, setPlatformOpen] = useState(false);
+  const [genreOpen, setGenreOpen] = useState(false);
+  const [storeOpen, setStoreOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
 
   const allPlatformsQuery = useQuery(api.games.getAllPlatforms);
   const allGenresQuery = useQuery(api.games.getAllGenres);
@@ -63,59 +99,45 @@ export function GameGrid({
     if (allPlatformsQuery && Array.isArray(allPlatformsQuery)) {
       return [...new Set(allPlatformsQuery)].sort();
     }
-    // fallback to current-page derived values if query not ready
-    const s = new Set<string>();
-    games.forEach(g => g.platforms.forEach(p => s.add(p)));
-    return Array.from(s).sort();
+    const values = new Set<string>();
+    games.forEach((game) => game.platforms.forEach((platform) => values.add(platform)));
+    return Array.from(values).sort();
   }, [allPlatformsQuery, games]);
 
   const allGenres = useMemo(() => {
     if (allGenresQuery && Array.isArray(allGenresQuery)) {
       return [...new Set(allGenresQuery)].sort();
     }
-    // fallback to current-page derived values if query not ready
-    const s = new Set<string>();
-    games.forEach(g => g.genres.forEach(x => s.add(x)));
-    return Array.from(s).sort();
+    const values = new Set<string>();
+    games.forEach((game) => game.genres.forEach((genre) => values.add(genre)));
+    return Array.from(values).sort();
   }, [allGenresQuery, games]);
 
   const allStores = useMemo(() => {
     if (allStoresQuery && Array.isArray(allStoresQuery)) {
       return allStoresQuery;
     }
-    // fallback to current-page derived values if query not ready
-    const s = new Set<string>();
-    games.forEach(g => {
-      if (g.ownedOnSteam) s.add("steam");
-      if (g.ownedOnEpic) s.add("epic");
-      if (g.ownedOnGog) s.add("gog");
+    const values = new Set<string>();
+    games.forEach((game) => {
+      if (game.ownedOnSteam) values.add("steam");
+      if (game.ownedOnEpic) values.add("epic");
+      if (game.ownedOnGog) values.add("gog");
     });
-    return Array.from(s).sort();
+    return Array.from(values).sort();
   }, [allStoresQuery, games]);
 
-  const [platformQuery, setPlatformQuery] = useState("");
-  const [genreQuery, setGenreQuery] = useState("");
-  const [storeQuery, setStoreQuery] = useState("");
-  const [platformOpen, setPlatformOpen] = useState(false);
-  const [genreOpen, setGenreOpen] = useState(false);
-  const [storeOpen, setStoreOpen] = useState(false);
-  const [sortOpen, setSortOpen] = useState(false);
-  const filteredPlatforms = useMemo(() => allPlatforms.filter(p => p.toLowerCase().includes(platformQuery.toLowerCase())), [allPlatforms, platformQuery]);
-  const filteredGenres = useMemo(() => allGenres.filter(g => g.toLowerCase().includes(genreQuery.toLowerCase())), [allGenres, genreQuery]);
-  const filteredStores = useMemo(() => allStores.filter(s => s.toLowerCase().includes(storeQuery.toLowerCase())), [allStores, storeQuery]);
-
-  const clearPlatforms = () => {
-    selectedPlatforms.forEach(p => onPlatformToggle(p));
-    setPlatformQuery("");
-  };
-  const clearGenres = () => {
-    selectedGenres.forEach(g => onGenreToggle(g));
-    setGenreQuery("");
-  };
-  const clearStores = () => {
-    selectedStores.forEach(s => onStoreToggle(s));
-    setStoreQuery("");
-  };
+  const filteredPlatforms = useMemo(
+    () => allPlatforms.filter((platform) => platform.toLowerCase().includes(platformQuery.toLowerCase())),
+    [allPlatforms, platformQuery],
+  );
+  const filteredGenres = useMemo(
+    () => allGenres.filter((genre) => genre.toLowerCase().includes(genreQuery.toLowerCase())),
+    [allGenres, genreQuery],
+  );
+  const filteredStores = useMemo(
+    () => allStores.filter((store) => store.toLowerCase().includes(storeQuery.toLowerCase())),
+    [allStores, storeQuery],
+  );
 
   const platformRef = useRef<HTMLDivElement | null>(null);
   const genreRef = useRef<HTMLDivElement | null>(null);
@@ -123,339 +145,256 @@ export function GameGrid({
   const sortRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (platformOpen && platformRef.current && !platformRef.current.contains(target)) {
-        setPlatformOpen(false);
-      }
-      if (genreOpen && genreRef.current && !genreRef.current.contains(target)) {
-        setGenreOpen(false);
-      }
-      if (storeOpen && storeRef.current && !storeRef.current.contains(target)) {
-        setStoreOpen(false);
-      }
-      if (sortOpen && sortRef.current && !sortRef.current.contains(target)) {
-        setSortOpen(false);
-      }
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (platformOpen && platformRef.current && !platformRef.current.contains(target)) setPlatformOpen(false);
+      if (genreOpen && genreRef.current && !genreRef.current.contains(target)) setGenreOpen(false);
+      if (storeOpen && storeRef.current && !storeRef.current.contains(target)) setStoreOpen(false);
+      if (sortOpen && sortRef.current && !sortRef.current.contains(target)) setSortOpen(false);
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [platformOpen, genreOpen, storeOpen, sortOpen]);
+  }, [genreOpen, platformOpen, sortOpen, storeOpen]);
 
-  const sortLabelMap: Record<string, string> = {
-    userAddedAt: "Date Added",
-    name: "Name",
-    rating: "Rating",
-    metacritic: "Metacritic",
-    released: "Release Date",
+  const clearPlatforms = () => {
+    selectedPlatforms.forEach((platform) => onPlatformToggle(platform));
+    setPlatformQuery("");
+  };
+
+  const clearGenres = () => {
+    selectedGenres.forEach((genre) => onGenreToggle(genre));
+    setGenreQuery("");
+  };
+
+  const clearStores = () => {
+    selectedStores.forEach((store) => onStoreToggle(store));
+    setStoreQuery("");
   };
 
   return (
     <>
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        {/* Left controls: View, Per page, Sort */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2 mr-2">
-            <span className="text-sm font-medium text-gray-700">View:</span>
-            <div className="flex rounded-md border border-gray-300">
+      <div className="rounded-lg border border-[#dbd9e1] bg-white p-3">
+        <div className="flex flex-col gap-3 2xl:flex-row 2xl:items-center 2xl:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-lg border border-[#c6c5d3] bg-white p-0.5">
               <button
                 onClick={() => onViewModeChange("grid")}
-                className={`px-3 py-1 text-sm rounded-l-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
-                  viewMode === "grid" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary/30 ${
+                  viewMode === "grid" ? "bg-primary text-white" : "text-[#454651] hover:bg-[#f5f2fa]"
                 }`}
               >
                 Grid
               </button>
               <button
                 onClick={() => onViewModeChange("table")}
-                className={`px-3 py-1 text-sm rounded-r-md focus:outline-hidden focus:ring-2 focus:ring-blue-500 ${
-                  viewMode === "table" ? "bg-blue-600 text-white" : "bg-white hover:bg-gray-50"
+                className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-primary/30 ${
+                  viewMode === "table" ? "bg-primary text-white" : "text-[#454651] hover:bg-[#f5f2fa]"
                 }`}
               >
                 Table
               </button>
             </div>
-          </div>
-          <div className="flex items-center gap-2 mr-4">
-            <span className="text-sm font-medium text-gray-700">Per page:</span>
-            <div className="w-24">
-              <ComboBox
-                value={itemsPerPage}
-                onChange={(v) => onItemsPerPageChange(Number(v))}
-                options={[12, 24, 48].map((n) => ({ label: String(n), value: n }))}
-                buttonClassName="text-sm"
-                align="left"
-              />
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#454651]">Per page</span>
+              <div className="w-24">
+                <ComboBox
+                  value={itemsPerPage}
+                  onChange={(value) => onItemsPerPageChange(Number(value))}
+                  options={[12, 24, 48].map((count) => ({ label: String(count), value: count }))}
+                  buttonClassName="h-9 rounded-lg border-[#c6c5d3] text-sm"
+                  align="left"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-[#454651]">Sort</span>
+              <div className="relative w-48" ref={sortRef}>
+                <button
+                  type="button"
+                  onClick={() => setSortOpen((value) => !value)}
+                  className="flex h-9 w-full items-center justify-between rounded-lg border border-[#c6c5d3] bg-white px-3 text-sm text-[#1b1b21]"
+                >
+                  <span>{sortLabelMap[sortBy] ?? sortBy}</span>
+                  <Caret open={sortOpen} />
+                </button>
+                {sortOpen && (
+                  <div className="absolute left-0 right-0 z-10 mt-1 rounded-lg border border-[#dbd9e1] bg-white shadow-sm">
+                    <div className="max-h-48 overflow-auto py-1">
+                      {Object.entries(sortLabelMap).map(([value, label]) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSortOpen(false);
+                            if (value !== sortBy) onSortChange(value, sortOrder);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-[#f5f2fa] ${
+                            sortBy === value ? "bg-[#dfe0ff] text-[#333f91]" : "text-[#1b1b21]"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
+                className="h-9 rounded-lg border border-[#c6c5d3] px-3 text-sm font-semibold text-[#454651] hover:bg-[#f5f2fa] focus:outline-hidden focus:ring-2 focus:ring-primary/30"
+              >
+                {sortOrder === "asc" ? "Asc" : "Desc"}
+              </button>
             </div>
           </div>
-          {/* Sort controls */}
-          <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Sort by:</span>
-          <div className="relative w-48" ref={sortRef}>
-            <button
-              type="button"
-              onClick={() => setSortOpen((v) => !v)}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white"
-            >
-              <span>{sortLabelMap[sortBy] ?? sortBy}</span>
-              <span className="text-xs text-gray-500">{sortOpen ? "▲" : "▼"}</span>
-            </button>
-            {sortOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
-                <div className="max-h-48 overflow-auto py-1">
-                  {Object.entries(sortLabelMap).map(([value, label]) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSortOpen(false);
-                        if (value !== sortBy) {
-                          onSortChange(value, sortOrder);
-                        }
-                      }}
-                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${
-                        sortBy === value ? "bg-blue-50 text-blue-700" : ""
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <button
-            onClick={() => onSortChange(sortBy, sortOrder === "asc" ? "desc" : "asc")}
-            className="px-2 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
-          >
-            {sortOrder === "asc" ? "↑" : "↓"}
-          </button>
-          </div>
-        </div>
-        {/* Platforms and Genres controls */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-64" ref={platformRef}>
-            <button type="button" onClick={() => setPlatformOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
-              <span>{selectedPlatforms.length ? `Platforms (${selectedPlatforms.length})` : "Platforms"}</span>
-              <span className="text-xs text-gray-500">{platformOpen ? "▲" : "▼"}</span>
-            </button>
-            {platformOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
-                <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
-                  <input
-                    value={platformQuery}
-                    onChange={(e) => setPlatformQuery(e.target.value)}
-                    placeholder="Filter platforms..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
-                  />
-                  <button type="button" onClick={clearPlatforms} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
-                </div>
-                <div className="max-h-48 overflow-auto">
-                  {filteredPlatforms.length === 0 && (
-                    <div className="px-2 py-2 text-xs text-gray-500">No results</div>
-                  )}
-                  {filteredPlatforms.map(p => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onPlatformToggle(p); }}
-                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedPlatforms.includes(p) ? 'bg-blue-50 text-blue-700' : ''}`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="relative w-64" ref={genreRef}>
-            <button type="button" onClick={() => setGenreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
-              <span>{selectedGenres.length ? `Genres (${selectedGenres.length})` : "Genres"}</span>
-              <span className="text-xs text-gray-500">{genreOpen ? "▲" : "▼"}</span>
-            </button>
-            {genreOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
-                <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
-                  <input
-                    value={genreQuery}
-                    onChange={(e) => setGenreQuery(e.target.value)}
-                    placeholder="Filter genres..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
-                  />
-                  <button type="button" onClick={clearGenres} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
-                </div>
-                <div className="max-h-48 overflow-auto">
-                  {filteredGenres.length === 0 && (
-                    <div className="px-2 py-2 text-xs text-gray-500">No results</div>
-                  )}
-                  {filteredGenres.map(g => (
-                    <button
-                      key={g}
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onGenreToggle(g); }}
-                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedGenres.includes(g) ? 'bg-purple-50 text-purple-700' : ''}`}
-                    >
-                      {g}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="relative w-64" ref={storeRef}>
-            <button type="button" onClick={() => setStoreOpen(v => !v)} className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm flex items-center justify-between bg-white">
-              <span>{selectedStores.length ? `Stores (${selectedStores.length})` : "Stores"}</span>
-              <span className="text-xs text-gray-500">{storeOpen ? "▲" : "▼"}</span>
-            </button>
-            {storeOpen && (
-              <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-sm shadow-sm z-10">
-                <div className="p-2 border-b border-gray-100 flex gap-2 items-center">
-                  <input
-                    value={storeQuery}
-                    onChange={(e) => setStoreQuery(e.target.value)}
-                    placeholder="Filter stores..."
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-sm"
-                  />
-                  <button type="button" onClick={clearStores} className="text-xs px-2 py-1 border rounded-sm hover:bg-gray-50">Clear</button>
-                </div>
-                <div className="max-h-48 overflow-auto">
-                  {filteredStores.length === 0 && (
-                    <div className="px-2 py-2 text-xs text-gray-500">No results</div>
-                  )}
-                  {filteredStores.map(s => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onStoreToggle(s); }}
-                      className={`w-full text-left px-2 py-1 text-sm hover:bg-gray-100 ${selectedStores.includes(s) ? 'bg-green-50 text-green-700' : ''}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterMenu
+              label="Platforms"
+              open={platformOpen}
+              setOpen={setPlatformOpen}
+              query={platformQuery}
+              setQuery={setPlatformQuery}
+              items={filteredPlatforms}
+              selectedItems={selectedPlatforms}
+              onToggle={onPlatformToggle}
+              onClear={clearPlatforms}
+              itemLabel={(item) => item}
+              menuRef={platformRef}
+            />
+            <FilterMenu
+              label="Genres"
+              open={genreOpen}
+              setOpen={setGenreOpen}
+              query={genreQuery}
+              setQuery={setGenreQuery}
+              items={filteredGenres}
+              selectedItems={selectedGenres}
+              onToggle={onGenreToggle}
+              onClear={clearGenres}
+              itemLabel={(item) => item}
+              menuRef={genreRef}
+            />
+            <FilterMenu
+              label="Stores"
+              open={storeOpen}
+              setOpen={setStoreOpen}
+              query={storeQuery}
+              setQuery={setStoreQuery}
+              items={filteredStores}
+              selectedItems={selectedStores}
+              onToggle={onStoreToggle}
+              onClear={clearStores}
+              itemLabel={(item) => storeLabels[item] ?? item}
+              menuRef={storeRef}
+            />
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {games.map((game) => (
-          <div
+          <button
             key={game._id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+            type="button"
+            className="group overflow-hidden rounded-lg border border-[#dbd9e1] bg-white text-left transition-colors hover:border-[#767682]"
             onClick={() => setSelectedGameId(game._id)}
           >
-            <div className="aspect-video bg-gray-200 relative overflow-hidden">
+            <div className="relative aspect-[4/3] overflow-hidden bg-[#efedf4]">
               {game.backgroundImage ? (
                 <img
                   src={game.backgroundImage}
                   alt={game.name}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div className="flex h-full w-full items-center justify-center text-[#767682]">
+                  <svg className="size-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z" />
                   </svg>
                 </div>
               )}
               {game.rating && (
-                <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded-sm text-sm font-semibold flex items-center gap-1">
-                  <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-white/95 px-2 py-1 text-xs font-bold text-[#1b1b21] ring-1 ring-inset ring-[#dbd9e1]">
+                  <svg className="size-3 text-[#6d3200]" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   {game.rating.toFixed(1)}
                 </div>
               )}
             </div>
-            
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{game.name}</h3>
-              
-              {game.released && (
-                <p className="text-sm text-gray-600 mb-3">
-                  {new Date(game.released).getFullYear()}
-                </p>
-              )}
 
-              {/* Platforms */}
-              <div className="mb-3">
-                <div className="flex flex-wrap gap-1">
-                  {game.platforms.slice(0, 3).map((platform) => {
-                    const isSelected = selectedPlatforms.includes(platform);
-                    return (
-                      <button
-                        key={platform}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onPlatformToggle(platform);
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                          isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                        }`}
-                      >
-                        {platform}
-                      </button>
-                    );
-                  })}
-                  {game.platforms.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
-                      +{game.platforms.length - 3}
-                    </span>
-                  )}
-                </div>
+            <div className="p-3">
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <h3 className="line-clamp-2 min-h-10 text-sm font-bold leading-5 text-[#1b1b21]">
+                  {game.name}
+                </h3>
+                {game.released && (
+                  <span className="shrink-0 rounded-md bg-[#f5f2fa] px-2 py-1 text-xs font-semibold text-[#454651]">
+                    {new Date(game.released).getFullYear()}
+                  </span>
+                )}
               </div>
 
-              {/* Genres */}
-              <div>
-                <div className="flex flex-wrap gap-1">
-                  {game.genres.slice(0, 2).map((genre) => {
-                    const isSelected = selectedGenres.includes(genre);
-                    return (
-                      <button
-                        key={genre}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onGenreToggle(genre);
-                        }}
-                        className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
-                          isSelected
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-                        }`}
-                      >
-                        {genre}
-                      </button>
-                    );
-                  })}
-                  {game.genres.length > 2 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-sm text-xs">
-                      +{game.genres.length - 2}
-                    </span>
-                  )}
-                </div>
+              <div className="mb-2 flex flex-wrap gap-1">
+                {game.platforms.slice(0, 3).map((platform) => (
+                  <span
+                    key={platform}
+                    className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                      selectedPlatforms.includes(platform)
+                        ? "bg-primary text-white"
+                        : "bg-[#dfe0ff] text-[#333f91]"
+                    }`}
+                  >
+                    {platform}
+                  </span>
+                ))}
+                {game.platforms.length > 3 && (
+                  <span className="rounded-md bg-[#f5f2fa] px-2 py-1 text-xs font-semibold text-[#454651]">
+                    +{game.platforms.length - 3}
+                  </span>
+                )}
               </div>
 
-              {/* Store Ownership */}
+              <div className="flex flex-wrap gap-1">
+                {game.genres.slice(0, 2).map((genre) => (
+                  <span
+                    key={genre}
+                    className={`rounded-md px-2 py-1 text-xs font-semibold ${
+                      selectedGenres.includes(genre)
+                        ? "bg-[#454651] text-white"
+                        : "bg-[#f5f2fa] text-[#454651] ring-1 ring-inset ring-[#dbd9e1]"
+                    }`}
+                  >
+                    {genre}
+                  </span>
+                ))}
+                {game.genres.length > 2 && (
+                  <span className="rounded-md bg-[#f5f2fa] px-2 py-1 text-xs font-semibold text-[#454651]">
+                    +{game.genres.length - 2}
+                  </span>
+                )}
+              </div>
+
               {(game.ownedOnSteam || game.ownedOnEpic || game.ownedOnGog) && (
-                <div className="mt-3">
-                  <div className="flex flex-wrap gap-1">
+                <div className="mt-3 border-t border-[#efedf4] pt-3">
+                  <div className="flex flex-wrap gap-1.5">
                     {game.ownedOnSteam && (
-                      <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-sm text-xs font-medium">
+                      <span className="rounded-md bg-[#ffdbc7] px-2 py-1 text-xs font-semibold text-[#723603]">
                         Steam
                       </span>
                     )}
                     {game.ownedOnEpic && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-sm text-xs font-medium">
+                      <span className="rounded-md bg-[#f5f2fa] px-2 py-1 text-xs font-semibold text-[#454651] ring-1 ring-inset ring-[#dbd9e1]">
                         Epic Games
                       </span>
                     )}
                     {game.ownedOnGog && (
-                      <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-sm text-xs font-medium">
+                      <span className="rounded-md bg-[#efedf4] px-2 py-1 text-xs font-semibold text-[#454651]">
                         GOG
                       </span>
                     )}
@@ -463,16 +402,91 @@ export function GameGrid({
                 </div>
               )}
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
       {selectedGameId && (
-        <GameDetailModal
-          gameId={selectedGameId}
-          onClose={() => setSelectedGameId(null)}
-        />
+        <GameDetailModal gameId={selectedGameId} onClose={() => setSelectedGameId(null)} />
       )}
     </>
+  );
+}
+
+interface FilterMenuProps {
+  label: string;
+  open: boolean;
+  setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
+  query: string;
+  setQuery: (query: string) => void;
+  items: string[];
+  selectedItems: string[];
+  onToggle: (item: string) => void;
+  onClear: () => void;
+  itemLabel: (item: string) => string;
+  menuRef: React.RefObject<HTMLDivElement | null>;
+}
+
+function FilterMenu({
+  label,
+  open,
+  setOpen,
+  query,
+  setQuery,
+  items,
+  selectedItems,
+  onToggle,
+  onClear,
+  itemLabel,
+  menuRef,
+}: FilterMenuProps) {
+  return (
+    <div className="relative w-full sm:w-56" ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex h-9 w-full items-center justify-between rounded-lg border border-[#c6c5d3] bg-white px-3 text-sm text-[#1b1b21]"
+      >
+        <span>{selectedItems.length ? `${label} (${selectedItems.length})` : label}</span>
+        <Caret open={open} />
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 z-10 mt-1 rounded-lg border border-[#dbd9e1] bg-white shadow-sm">
+          <div className="flex items-center gap-2 border-b border-[#efedf4] p-2">
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={`Filter ${label.toLowerCase()}...`}
+              className="w-full rounded-md border border-[#c6c5d3] px-2 py-1 text-sm focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary"
+            />
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-md border border-[#c6c5d3] px-2 py-1 text-xs font-semibold hover:bg-[#f5f2fa]"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="max-h-48 overflow-auto py-1">
+            {items.length === 0 && <div className="px-3 py-2 text-xs text-[#767682]">No results</div>}
+            {items.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggle(item);
+                }}
+                className={`w-full px-3 py-2 text-left text-sm hover:bg-[#f5f2fa] ${
+                  selectedItems.includes(item) ? "bg-[#dfe0ff] text-[#333f91]" : "text-[#1b1b21]"
+                }`}
+              >
+                {itemLabel(item)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

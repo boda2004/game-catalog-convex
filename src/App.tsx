@@ -7,19 +7,26 @@ import { GameCatalog } from "./components/GameCatalog";
 
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-xs h-16 flex justify-between items-center border-b shadow-xs px-4">
-        <h2 className="text-xl font-semibold text-primary">Game Catalog</h2>
+    <div className="min-h-screen flex flex-col bg-[#fbf8ff] text-[#1b1b21]">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#dbd9e1] bg-white/95 px-4 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="grid size-8 place-items-center rounded-lg border border-[#c6c5d3] bg-[#f5f2fa] text-sm font-bold text-primary">
+            GC
+          </div>
+          <h2 className="text-base font-semibold tracking-normal text-[#1b1b21]">Game Catalog</h2>
+        </div>
         <Authenticated>
           <SignOutButton />
         </Authenticated>
       </header>
-      <main className="flex-1 p-4">
+      <main className="flex-1">
         <Content />
       </main>
-      <footer className="border-t bg-white/70 backdrop-blur-xs text-xs text-gray-600 px-4 py-3 flex items-center justify-between">
+      <footer className="border-t border-[#dbd9e1] bg-white/80 px-4 py-3 text-xs text-[#454651]">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">
         <span>© {new Date().getFullYear()} Game Catalog</span>
         <span>v{__APP_VERSION__}</span>
+        </div>
       </footer>
       <Toaster />
     </div>
@@ -38,22 +45,16 @@ function Content() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div>
       <Authenticated>
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Game Catalog</h1>
-          <p className="text-gray-600">
-            Manage your personal game collection with data from RAWG
-          </p>
-        </div>
         <GameCatalog />
       </Authenticated>
 
       <Unauthenticated>
-        <div className="flex flex-col items-center justify-center min-h-[400px] gap-8">
+        <div className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-5xl flex-col items-center justify-center gap-8 px-4">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Game Catalog</h1>
-            <p className="text-xl text-gray-600 mb-8">
+            <h1 className="mb-4 text-4xl font-bold text-[#1b1b21]">Game Catalog</h1>
+            <p className="mb-8 text-xl text-[#454651]">
               Track and organize your personal game collection
             </p>
           </div>

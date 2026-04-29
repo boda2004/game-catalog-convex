@@ -21,7 +21,7 @@ export const getUserGames = query({
     searchTerm: v.optional(v.string()),
     platforms: v.optional(v.array(v.string())),
     genres: v.optional(v.array(v.string())),
-    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic"), v.literal("gog")))),
+    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic"), v.literal("gog"), v.literal("no_store")))),
     sortBy: v.optional(v.string()),
     sortOrder: v.optional(v.string()),
     page: v.optional(v.number()),
@@ -100,6 +100,14 @@ export const getUserGames = query({
         if (args.stores!.includes("steam") && game.ownedOnSteam) return true;
         if (args.stores!.includes("epic") && game.ownedOnEpic) return true;
         if (args.stores!.includes("gog") && game.ownedOnGog) return true;
+        if (
+          args.stores!.includes("no_store") &&
+          !game.ownedOnSteam &&
+          !game.ownedOnEpic &&
+          !game.ownedOnGog
+        ) {
+          return true;
+        }
         return false;
       });
     }
@@ -512,6 +520,7 @@ export const getAllStores = query({
       if (rel.ownedOnSteam) storeSet.add("steam");
       if (rel.ownedOnEpic) storeSet.add("epic");
       if (rel.ownedOnGog) storeSet.add("gog");
+      if (!rel.ownedOnSteam && !rel.ownedOnEpic && !rel.ownedOnGog) storeSet.add("no_store");
     });
 
     return Array.from(storeSet).sort();

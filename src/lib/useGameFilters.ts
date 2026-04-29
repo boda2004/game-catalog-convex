@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useDebounce } from "./hooks";
 
-export type FilterStore = "steam" | "epic" | "gog";
+export type FilterStore = "steam" | "epic" | "gog" | "no_store";
 export type SortOrder = "asc" | "desc";
 
 export function useGameFilters(preferencesItemsPerPage?: number) {

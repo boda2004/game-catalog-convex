@@ -1,10 +1,10 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-primary-hover: #2563eb;
+  --color-primary: #2e3a8c;
+  --color-primary-hover: #142175;
 
-  --color-secondary: #6b7280;
+  --color-secondary: #454651;
 
   --spacing-section: 2rem;
   --spacing-container: 1rem;
@@ -31,8 +31,8 @@
 }
 
 :root {
-  --color-light: #ffffff;
-  --color-dark: #171717;
+  --color-light: #fbf8ff;
+  --color-dark: #1b1b21;
 }
 
 .accent-text {
@@ -41,6 +41,7 @@
 
 body {
   font-family:
+    "Manrope",
     "Inter Variable",
     ui-sans-serif,
     system-ui,

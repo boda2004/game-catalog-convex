@@ -1,4 +1,5 @@
 import React from "react";
+import type { FilterStore } from "../lib/useGameFilters";
 
 interface FilterBarProps {
   searchTerm: string;
@@ -6,11 +7,18 @@ interface FilterBarProps {
   onClearFilters: () => void;
   selectedPlatforms: string[];
   selectedGenres: string[];
-  selectedStores: ("steam" | "epic" | "gog")[];
+  selectedStores: FilterStore[];
   onPlatformToggle: (platform: string) => void;
   onGenreToggle: (genre: string) => void;
-  onStoreToggle: (store: "steam" | "epic" | "gog") => void;
+  onStoreToggle: (store: FilterStore) => void;
 }
+
+const storeLabels: Record<FilterStore, string> = {
+  steam: "Steam",
+  epic: "Epic Games",
+  gog: "GOG",
+  no_store: "No store",
+};
 
 const FilterBarInternal = ({
   searchTerm,
@@ -27,15 +35,14 @@ const FilterBarInternal = ({
     selectedPlatforms.length > 0 || selectedGenres.length > 0 || selectedStores.length > 0;
 
   return (
-    <div className="bg-white rounded-lg shadow-xs border p-4 sm:p-5 space-y-3">
-      {/* Search */}
-      <div>
-        <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1.5">
-          Search Games
-        </label>
+    <div className="rounded-lg border border-[#dbd9e1] bg-white p-3">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <label htmlFor="search" className="sr-only">
+            Search games
+          </label>
+          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+            <svg className="size-4 text-[#767682]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -45,30 +52,27 @@ const FilterBarInternal = ({
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-9 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-hidden focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="block h-10 w-full rounded-lg border border-[#c6c5d3] bg-white py-2 pl-9 pr-9 text-sm leading-5 placeholder:text-[#767682] focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary lg:w-[420px]"
           />
           {searchTerm.length > 0 && (
             <button
               type="button"
               onClick={() => onSearchChange("")}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#767682] hover:text-[#454651]"
               aria-label="Clear search"
             >
               ✕
             </button>
           )}
         </div>
-      </div>
 
-      {/* Active filters */}
-      {hasActiveFilters && (
-        <div className="flex flex-col gap-2 pt-2 border-t">
-          <div className="flex flex-wrap items-center gap-2">
+        {hasActiveFilters ? (
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
             {selectedPlatforms.map((p) => (
               <button
                 key={`p-${p}`}
                 onClick={() => onPlatformToggle(p)}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 hover:bg-blue-200"
+                className="inline-flex items-center gap-1 rounded-md bg-[#dfe0ff] px-2 py-1 text-xs font-medium text-[#333f91] hover:bg-[#bcc3ff]"
                 title="Remove platform filter"
               >
                 {p}
@@ -79,7 +83,7 @@ const FilterBarInternal = ({
               <button
                 key={`g-${g}`}
                 onClick={() => onGenreToggle(g)}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-800 hover:bg-purple-200"
+                className="inline-flex items-center gap-1 rounded-md bg-[#f5f2fa] px-2 py-1 text-xs font-medium text-[#454651] ring-1 ring-inset ring-[#dbd9e1] hover:bg-[#efedf4]"
                 title="Remove genre filter"
               >
                 {g}
@@ -90,24 +94,24 @@ const FilterBarInternal = ({
               <button
                 key={`s-${s}`}
                 onClick={() => onStoreToggle(s)}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 hover:bg-green-200"
+                className="inline-flex items-center gap-1 rounded-md bg-[#ffdbc7] px-2 py-1 text-xs font-medium text-[#723603] hover:bg-[#ffb689]"
                 title="Remove store filter"
               >
-                {s}
+                {storeLabels[s]}
                 <span className="ml-0.5">✕</span>
               </button>
             ))}
-          </div>
-          <div>
             <button
               onClick={onClearFilters}
-              className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+              className="rounded-md border border-[#c6c5d3] px-2 py-1 text-xs font-semibold text-[#454651] hover:bg-[#f5f2fa]"
             >
-              Clear all filters
+              Clear filters
             </button>
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-[#767682]">Search your saved games or use the filters below.</p>
+        )}
+      </div>
     </div>
   );
 };
