@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.0](https://github.com/boda2004/game-catalog-convex/compare/v1.11.0...v1.12.0) (2026-04-29)
+
+
+### Features
+
+* redesign game catalog layout ([8a992a6](https://github.com/boda2004/game-catalog-convex/commit/8a992a62c5bea6bcd61dfd27eebe8714426433b3))
+
 ## [1.11.0](https://github.com/boda2004/game-catalog-convex/compare/v1.10.0...v1.11.0) (2026-02-21)
 
 
