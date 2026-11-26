@@ -98,7 +98,7 @@ jobs:
 
   deploy-pages:
     needs: [deploy-convex, build-pages]
-    if: ${{ needs.deploy-convex.result == 'success' && needs.build-pages.result == 'success' }}
+    if: ${{ always() && needs.deploy-convex.result == 'success' && needs.build-pages.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
