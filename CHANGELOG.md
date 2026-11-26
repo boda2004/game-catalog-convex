@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.12.1](https://github.com/boda2004/game-catalog-convex/compare/v1.12.0...v1.12.1) (2026-11-26)
+
+
+### Bug Fixes
+
+* **deps:** upgrade framework and dependencies ([0d2fc33](https://github.com/boda2004/game-catalog-convex/commit/0d2fc338252c5edfcf60f80a7cc501ac212a90ab))
+
 ## [1.12.0](https://github.com/boda2004/game-catalog-convex/compare/v1.11.0...v1.12.0) (2026-04-29)
 
 
