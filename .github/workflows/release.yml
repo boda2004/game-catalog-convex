@@ -62,21 +62,17 @@ jobs:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: npx convex deploy
 
-  deploy-pages:
-    needs: deploy-convex
+  build-pages:
+    needs: release
+    if: ${{ !failure() && !cancelled() && (needs.release.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.deploy-convex.outputs.ref }}
+          ref: ${{ needs.release.outputs.tag_name || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v7
@@ -100,6 +96,17 @@ jobs:
         with:
           path: dist
 
+  deploy-pages:
+    needs: [deploy-convex, build-pages]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
