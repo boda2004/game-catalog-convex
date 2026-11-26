@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(
       JSON.parse(
-        fs.readFileSync(path.resolve(__dirname, "./package.json"), "utf-8")
+        fs.readFileSync(path.resolve(import.meta.dirname, "./package.json"), "utf-8")
       ).version,
     ),
   },
@@ -48,7 +48,7 @@ window.addEventListener('message', async (message) => {
   ].filter(Boolean),
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 }));
