@@ -1,47 +1,37 @@
-# Game Catalog Project
-  
-This is a project built with [Chef](https://chef.convex.dev) using [Convex](https://convex.dev) as its backend.
-You can find docs about Chef with useful information like how to deploy to production [here](https://docs.convex.dev/chef).
-  
-This project is connected to the Convex deployment named [`woozy-iguana-894`](https://dashboard.convex.dev/d/woozy-iguana-894).
-  
-## Project structure
-  
-The frontend code is in the `src` directory and is built with [Vite](https://vitejs.dev/).
-  
-The backend code is in the `convex` directory.
-  
-`npm run dev` will start the frontend and backend servers.
+# Game Catalog
 
-## App authentication
+Personal video game library manager built with **React 19**, **TypeScript**, **Tailwind CSS v4**, and **Convex**.
 
-The app uses [Convex Auth v2](https://docs.convex.dev/auth/convex-auth) with the Email + Password method and `@convex-dev/resend` for email verification and password recovery links.
+## Features
+- **Unified reactive library:** Single-query library sync with instant search, multi-select filtering (platforms, genres, stores, play status), sorting, pagination, and URL-synced state.
+- **Extensible multi-store tracking:** Track ownership across Steam, Epic Games, GOG, PlayStation, Xbox, Nintendo, itch.io, EA App, Ubisoft Connect, and physical/other copies—plus play status, personal 1–5 rating, playtime, and notes.
+- **Durable background imports:** Import from Steam (preserving Steam App IDs and playtime) or bulk-paste game titles. Imports run in chunked background jobs on Convex with local catalog cache matching and persisted per-game import history.
+- **Authentication & account security:** Powered by Convex Auth v2 (email/password sign-up verification, password recovery, change password, and change email via Resend).
 
-### Email & URL setup (required)
+## Getting Started
 
-Configure these environment variables on your Convex deployment (locally and in production):
+```bash
+npm install
+npm run dev
+```
+
+### Environment Variables (Convex deployment)
+Configure these on your Convex deployment (dev and prod):
+- `RAWG_API_KEY`: RAWG API key from https://rawg.io/apidocs
+- `STEAM_API_KEY`: Steam Web API key from https://steamcommunity.com/dev/apikey
 - `RESEND_API_KEY`: Resend API key from https://resend.com/
 - `EMAIL_FROM`: Verified sender address (e.g. `"Game Catalog <no-reply@example.com>"`)
-- `SITE_URL`: Public frontend base URL for emailed links (defaults to `http://localhost:5173`; for GitHub Pages set e.g. `https://<user>.github.io/<repo>`)
+- `SITE_URL`: Public frontend base URL for emailed links (defaults to `http://localhost:5173`)
 
-Notes:
-- New accounts must verify their email via the emailed link in the same browser before signing in.
-- Password recovery sends a 10-minute reset link to the verified email address.
-- New passwords must be at least 10 characters long.
+### Existing Data Compatibility & Backfill
+Existing `games` and `userGames` rows (including legacy `ownedOnSteam` / `ownedOnEpic` / `ownedOnGog` flags) are read transparently with zero downtime. To backfill existing rows into the new `stores[]` and `games.normalizedName` fields in batches, run:
 
-## Developing and deploying your app
+```bash
+npx convex run migrations:runCatalogBackfill
+```
 
-Check out the [Convex docs](https://docs.convex.dev/) for more information on how to develop with Convex.
-* If you're new to Convex, the [Overview](https://docs.convex.dev/understanding/) is a good place to start
-* Check out the [Hosting and Deployment](https://docs.convex.dev/production/) docs for how to deploy your app
-* Read the [Best Practices](https://docs.convex.dev/understanding/best-practices/) guide for tips on how to improve your app further
-
-## HTTP API
-
-User-defined http routes are defined in the `convex/router.ts` file. We split these routes into a separate file from `convex/http.ts` to allow us to prevent the LLM from modifying the authentication routes.
-
-
-## Release Please demo
-
-- Added this section to test automated release notes and versioning.
-
+## Scripts
+- `npm run dev` — Start Vite frontend + Convex dev backend
+- `npm run lint` — Typecheck backend & frontend, run ESLint, and build
+- `npm test -- --run` — Run Vitest suite
+- `npm run build` — Production Vite bundle

@@ -9,14 +9,18 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as catalogActions from "../catalogActions.js";
 import type * as games from "../games.js";
 import type * as gamesInternal from "../gamesInternal.js";
 import type * as http from "../http.js";
-import type * as migration from "../migration.js";
-import type * as rawg from "../rawg.js";
-import type * as rawgClient from "../rawgClient.js";
+import type * as imports from "../imports.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_domain from "../lib/domain.js";
+import type * as lib_userGames from "../lib/userGames.js";
+import type * as migrations from "../migrations.js";
+import type * as providers_rawg from "../providers/rawg.js";
+import type * as providers_steam from "../providers/steam.js";
 import type * as router from "../router.js";
-import type * as steam from "../steam.js";
 import type * as users from "../users.js";
 
 import type {
@@ -27,14 +31,18 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  catalogActions: typeof catalogActions;
   games: typeof games;
   gamesInternal: typeof gamesInternal;
   http: typeof http;
-  migration: typeof migration;
-  rawg: typeof rawg;
-  rawgClient: typeof rawgClient;
+  imports: typeof imports;
+  "lib/auth": typeof lib_auth;
+  "lib/domain": typeof lib_domain;
+  "lib/userGames": typeof lib_userGames;
+  migrations: typeof migrations;
+  "providers/rawg": typeof providers_rawg;
+  "providers/steam": typeof providers_steam;
   router: typeof router;
-  steam: typeof steam;
   users: typeof users;
 }>;
 

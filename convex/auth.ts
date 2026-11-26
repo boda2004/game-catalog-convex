@@ -51,6 +51,13 @@ export const getCurrentUserId = internalQuery({
 
 export const loggedInUser = query({
   args: {},
+  returns: v.union(
+    v.object({
+      _id: v.id("users"),
+      _creationTime: v.number(),
+    }),
+    v.null(),
+  ),
   handler: async (ctx) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) {
@@ -60,6 +67,9 @@ export const loggedInUser = query({
     if (!user) {
       return null;
     }
-    return user;
+    return {
+      _id: user._id,
+      _creationTime: user._creationTime,
+    };
   },
 });
