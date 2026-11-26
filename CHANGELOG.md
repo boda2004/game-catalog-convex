@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/boda2004/game-catalog-convex/compare/v2.0.0...v2.1.0) (2026-11-26)
+
+
+### Features
+
+* rebuild catalog architecture with extensible stores and durable imports ([#29](https://github.com/boda2004/game-catalog-convex/issues/29)) ([a2a5771](https://github.com/boda2004/game-catalog-convex/commit/a2a577168ae41cac6356d785ae65d1ae67ac315a))
+
 ## [2.0.0](https://github.com/boda2004/game-catalog-convex/compare/v1.12.1...v2.0.0) (2026-11-26)
 
 
