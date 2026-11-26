@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/boda2004/game-catalog-convex/compare/v1.12.1...v2.0.0) (2026-11-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* **auth:** Migrates @convex-dev/auth from v0.0.98 to v2.1.0 using Email + Password with @convex-dev/resend, removes Anonymous sign-in, moves auth storage to Convex components, and upgrades Node to v26 LTS along with jsdom v31 and @types/node v26.
+
+### Features
+
+* **auth:** migrate to Convex Auth v2 and update dependencies ([bc2523f](https://github.com/boda2004/game-catalog-convex/commit/bc2523f2024685bd8f731bc62396f3b2468741d5))
+
 ## [1.12.1](https://github.com/boda2004/game-catalog-convex/compare/v1.12.0...v1.12.1) (2026-11-26)
 
 
