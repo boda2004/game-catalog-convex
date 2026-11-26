@@ -15,30 +15,19 @@ The backend code is in the `convex` directory.
 
 ## App authentication
 
-Chef apps use [Convex Auth](https://auth.convex.dev/) with Anonymous auth for easy sign-in. You may wish to change this before deploying your app.
+The app uses [Convex Auth v2](https://docs.convex.dev/auth/convex-auth) with the Email + Password method and `@convex-dev/resend` for email verification and password recovery links.
 
-### Lost password (password reset)
+### Email & URL setup (required)
 
-The app supports password reset for accounts created with the password provider.
-
-How it works:
-- On the sign-in form, click "Forgot your password?".
-- Enter your email to request a reset code.
-- Check your email for the code. The server sends the code via the Resend email API (see `convex/auth.ts`).
-- Enter the code and your new password in the form to complete the reset.
-
-Email setup (required):
-- Create a Resend account and get an API key: https://resend.com/
-- Configure these environment variables for Convex (locally and in production):
-  - RESEND_API_KEY
-  - EMAIL_FROM (e.g. "Game Catalog <no-reply@example.com>")
-  - EMAIL_SUBJECT (optional, default: "Your password reset code")
-  - EMAIL_REPLY_TO (optional)
+Configure these environment variables on your Convex deployment (locally and in production):
+- `RESEND_API_KEY`: Resend API key from https://resend.com/
+- `EMAIL_FROM`: Verified sender address (e.g. `"Game Catalog <no-reply@example.com>"`)
+- `SITE_URL`: Public frontend base URL for emailed links (defaults to `http://localhost:5173`; for GitHub Pages set e.g. `https://<user>.github.io/<repo>`)
 
 Notes:
-- Passwords must be at least 8 characters long.
-- Reset codes and links are not logged anywhere by the server.
-- If email is not configured, starting a password reset will fail with a clear error.
+- New accounts must verify their email via the emailed link in the same browser before signing in.
+- Password recovery sends a 10-minute reset link to the verified email address.
+- New passwords must be at least 10 characters long.
 
 ## Developing and deploying your app
 

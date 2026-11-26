@@ -1,11 +1,27 @@
 import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { useCallback, useState } from "react";
 import { api } from "../convex/_generated/api";
+import { AuthLinkView } from "./AuthLinkViews";
+import {
+  getAuthLinkRoute,
+  type AuthLinkRoute,
+} from "./lib/authLinkRoute";
 import { SignInForm } from "./SignInForm";
 import { SignOutButton } from "./SignOutButton";
 import { Toaster } from "sonner";
 import { GameCatalog } from "./components/GameCatalog";
 
 export default function App() {
+  const [authLinkRoute, setAuthLinkRoute] = useState<AuthLinkRoute | null>(() =>
+    getAuthLinkRoute(),
+  );
+
+  const handleAuthLinkDone = useCallback(() => {
+    const basePath = import.meta.env.BASE_URL || "/";
+    window.history.replaceState(null, "", basePath);
+    setAuthLinkRoute(null);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fbf8ff] text-[#1b1b21]">
       <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#dbd9e1] bg-white/95 px-4 backdrop-blur-sm">
@@ -20,7 +36,11 @@ export default function App() {
         </Authenticated>
       </header>
       <main className="flex-1">
-        <Content />
+        {authLinkRoute !== null ? (
+          <AuthLinkView route={authLinkRoute} onDone={handleAuthLinkDone} />
+        ) : (
+          <Content />
+        )}
       </main>
       <footer className="border-t border-[#dbd9e1] bg-white/80 px-4 py-3 text-xs text-[#454651]">
         <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between">

@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { internal, api } from "./_generated/api";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 import { rawgFetchWithRetry, fetchAndNormalizeRawgGame, searchAndNormalizeRawgGame } from "./rawgClient";
 
@@ -43,7 +42,7 @@ export const addGame = action({
     const gameInfo = await fetchAndNormalizeRawgGame(args.rawgId, apiKey);
 
     // Get the current user
-    const userId = await getAuthUserId(ctx);
+    const userId = await ctx.runQuery(internal.auth.getCurrentUserId, {});
     if (!userId) {
       throw new Error("User not authenticated");
     }
@@ -94,7 +93,7 @@ export const addGamesByNames = action({
     }
 
     // Get the current user
-    const userId = await getAuthUserId(ctx);
+    const userId = await ctx.runQuery(internal.auth.getCurrentUserId, {});
     if (!userId) {
       throw new Error("User not authenticated");
     }
