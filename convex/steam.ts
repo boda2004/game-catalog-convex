@@ -2,7 +2,6 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal, api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { getAuthUserId } from "@convex-dev/auth/server";
 import { searchAndNormalizeRawgGame } from "./rawgClient";
 
 type SteamOwnedGame = {
@@ -55,7 +54,7 @@ export const importOwnedGames = action({
     jobId: v.optional(v.id("importJobs")),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
+    const userId = await ctx.runQuery(internal.auth.getCurrentUserId, {});
     if (!userId) throw new Error("User not authenticated");
 
     const steamApiKey = process.env.STEAM_API_KEY;

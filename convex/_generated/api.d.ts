@@ -17,6 +17,7 @@ import type * as rawg from "../rawg.js";
 import type * as rawgClient from "../rawgClient.js";
 import type * as router from "../router.js";
 import type * as steam from "../steam.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   rawgClient: typeof rawgClient;
   router: typeof router;
   steam: typeof steam;
+  users: typeof users;
 }>;
 
 /**
@@ -62,4 +64,9 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  auth: import("@convex-dev/auth/_generated/component.js").ComponentApi<"auth">;
+  authEmail: import("@convex-dev/auth/components/email/_generated/component.js").ComponentApi<"authEmail">;
+  authPassword: import("@convex-dev/auth/components/password/_generated/component.js").ComponentApi<"authPassword">;
+  resend: import("@convex-dev/resend/_generated/component.js").ComponentApi<"resend">;
+};
