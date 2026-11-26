@@ -3,52 +3,23 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import fs from "fs";
 
-// https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  // Important for GitHub Pages: lets us deploy under a subpath like "/repo-name/"
-  // You can override this at build time via the BASE_PATH environment variable.
+export default defineConfig({
+  // Supports GitHub Pages subpath deployments via BASE_PATH
   base: process.env.BASE_PATH || "/",
   define: {
     __APP_VERSION__: JSON.stringify(
       JSON.parse(
-        fs.readFileSync(path.resolve(import.meta.dirname, "./package.json"), "utf-8")
+        fs.readFileSync(
+          path.resolve(import.meta.dirname, "./package.json"),
+          "utf-8",
+        ),
       ).version,
     ),
   },
-  plugins: [
-    react(),
-    // The code below enables dev tools like taking screenshots of your site
-    // while it is being developed on chef.convex.dev.
-    // Feel free to remove this code if you're no longer developing your app with Chef.
-    mode === "development"
-      ? {
-          name: "inject-chef-dev",
-          transform(code: string, id: string) {
-            if (id.includes("main.tsx")) {
-              return {
-                code: `${code}
-
-/* Added by Vite plugin inject-chef-dev */
-window.addEventListener('message', async (message) => {
-  if (message.source !== window.parent) return;
-  if (message.data.type !== 'chefPreviewRequest') return;
-
-  const worker = await import('https://chef.convex.dev/scripts/worker.bundled.mjs');
-  await worker.respondToMessage(message);
-});
-            `,
-                map: null,
-              };
-            }
-            return null;
-          },
-        }
-      : null,
-    // End of code for taking screenshots on chef.convex.dev.
-  ].filter(Boolean),
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
-}));
+});

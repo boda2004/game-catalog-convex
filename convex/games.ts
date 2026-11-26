@@ -1,628 +1,476 @@
 import { v } from "convex/values";
-import { query, mutation, action, internalMutation } from "./_generated/server";
-import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { mutation, query } from "./_generated/server";
+import { requireUserId } from "./lib/auth";
+import {
+  GAME_STATUSES,
+  STORE_IDS,
+  gameStatusValidator,
+  getEffectiveStores,
+  mergeStores,
+  normalizeStores,
+  storeIdValidator,
+  type GameStatus,
+  type StoreId,
+} from "./lib/domain";
+import { linkExistingGameToUser } from "./lib/userGames";
 
-async function getLoggedInUser(ctx: any) {
-  const userId = await getAuthUserId(ctx);
-  if (!userId) {
-    throw new Error("User not found");
-  }
-  const user = await ctx.db.get(userId);
-  if (!user) {
-    throw new Error("User not found");
-  }
-  return user;
-}
+const DEFAULT_VISIBLE_FIELDS = [
+  "name",
+  "platforms",
+  "genres",
+  "stores",
+  "status",
+  "rating",
+  "released",
+];
 
-export const getUserGames = query({
-  args: {
-    searchTerm: v.optional(v.string()),
-    platforms: v.optional(v.array(v.string())),
-    genres: v.optional(v.array(v.string())),
-    stores: v.optional(v.array(v.union(v.literal("steam"), v.literal("epic"), v.literal("gog"), v.literal("no_store")))),
-    sortBy: v.optional(v.string()),
-    sortOrder: v.optional(v.string()),
-    page: v.optional(v.number()),
-    itemsPerPage: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-    
-    // Get user's games through the userGames relationship
-    const userGameRelations = await ctx.db
+const libraryItemValidator = v.object({
+  _id: v.id("games"),
+  rawgId: v.number(),
+  name: v.string(),
+  slug: v.string(),
+  backgroundImage: v.optional(v.string()),
+  released: v.optional(v.string()),
+  rating: v.optional(v.number()),
+  metacritic: v.optional(v.number()),
+  platforms: v.array(v.string()),
+  genres: v.array(v.string()),
+  developers: v.array(v.string()),
+  publishers: v.array(v.string()),
+  userAddedAt: v.number(),
+  stores: v.array(storeIdValidator),
+  status: v.optional(gameStatusValidator),
+  userRating: v.optional(v.number()),
+  playtimeMinutes: v.optional(v.number()),
+});
+
+/**
+ * Single reactive subscription powering the entire catalog view:
+ * eliminates the previous 5x N+1 queries (getUserGames + getOwnedGamesInfo + getAllPlatforms/Genres/Stores).
+ */
+export const getLibrary = query({
+  args: {},
+  returns: v.object({
+    games: v.array(libraryItemValidator),
+    facets: v.object({
+      platforms: v.array(v.string()),
+      genres: v.array(v.string()),
+      stores: v.array(v.union(storeIdValidator, v.literal("no_store"))),
+      statuses: v.array(gameStatusValidator),
+    }),
+    stats: v.object({
+      total: v.number(),
+      noStore: v.number(),
+      byStore: v.record(v.string(), v.number()),
+      byStatus: v.record(v.string(), v.number()),
+    }),
+  }),
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    const relations = await ctx.db
       .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
 
-    if (userGameRelations.length === 0) {
+    if (relations.length === 0) {
       return {
         games: [],
-        totalCount: 0,
-        hasMore: false,
+        facets: { platforms: [], genres: [], stores: [], statuses: [] },
+        stats: { total: 0, noStore: 0, byStore: {}, byStatus: {} },
       };
     }
 
-    // Get the actual game documents
-    const gameIds = userGameRelations.map(rel => rel.gameId);
-    const allGames = await Promise.all(
-      gameIds.map(async (gameId) => {
-        const game = await ctx.db.get(gameId);
-        const userGameRel = userGameRelations.find(rel => rel.gameId === gameId);
-        return game ? { 
-          ...game, 
-          userAddedAt: userGameRel?.addedAt,
-          ownedOnSteam: userGameRel?.ownedOnSteam || false,
-          ownedOnEpic: userGameRel?.ownedOnEpic || false,
-          ownedOnGog: userGameRel?.ownedOnGog || false,
-        } : null;
-      })
-    );
+    // Deduplicate relations in-memory if any legacy duplicates exist for the same gameId
+    const relByGameId = new Map<
+      string,
+      {
+        gameId: (typeof relations)[number]["gameId"];
+        addedAt: number;
+        stores: StoreId[];
+        status?: GameStatus;
+        userRating?: number;
+        playtimeMinutes?: number;
+      }
+    >();
 
-    let games = allGames.filter(game => game !== null);
-
-    // Apply search filter
-    if (args.searchTerm) {
-      const searchTerm = args.searchTerm.toLowerCase();
-      games = games.filter(game => 
-        game.name.toLowerCase().includes(searchTerm) ||
-        game.genres.some((genre: string) => genre.toLowerCase().includes(searchTerm)) ||
-        game.platforms.some((platform: string) => platform.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    // Apply platform filter
-    if (args.platforms && args.platforms.length > 0) {
-      games = games.filter(game =>
-        args.platforms!.some((platform: string) =>
-          game.platforms.some((gamePlatform: string) =>
-            gamePlatform.toLowerCase().includes(platform.toLowerCase())
-          )
-        )
-      );
-    }
-
-    // Apply genre filter
-    if (args.genres && args.genres.length > 0) {
-      games = games.filter(game =>
-        args.genres!.some((genre: string) =>
-          game.genres.some((gameGenre: string) =>
-            gameGenre.toLowerCase().includes(genre.toLowerCase())
-          )
-        )
-      );
-    }
-
-    // Apply store filter
-    if (args.stores && args.stores.length > 0) {
-      games = games.filter(game => {
-        if (args.stores!.includes("steam") && game.ownedOnSteam) return true;
-        if (args.stores!.includes("epic") && game.ownedOnEpic) return true;
-        if (args.stores!.includes("gog") && game.ownedOnGog) return true;
-        if (
-          args.stores!.includes("no_store") &&
-          !game.ownedOnSteam &&
-          !game.ownedOnEpic &&
-          !game.ownedOnGog
-        ) {
-          return true;
+    for (const rel of relations) {
+      const key = rel.gameId;
+      const effectiveStores = getEffectiveStores(rel);
+      const existing = relByGameId.get(key);
+      if (existing) {
+        existing.stores = mergeStores(existing.stores, effectiveStores);
+        existing.addedAt = Math.min(existing.addedAt, rel.addedAt);
+        existing.status = existing.status ?? rel.status;
+        existing.userRating = existing.userRating ?? rel.userRating;
+        if (rel.playtimeMinutes !== undefined) {
+          existing.playtimeMinutes = Math.max(
+            existing.playtimeMinutes ?? 0,
+            rel.playtimeMinutes,
+          );
         }
-        return false;
-      });
+      } else {
+        relByGameId.set(key, {
+          gameId: rel.gameId,
+          addedAt: rel.addedAt,
+          stores: effectiveStores,
+          status: rel.status,
+          userRating: rel.userRating,
+          playtimeMinutes: rel.playtimeMinutes,
+        });
+      }
     }
 
-    // Apply sorting
-    const sortBy = args.sortBy || "userAddedAt";
-    const sortOrder = args.sortOrder || "desc";
-    
-    games.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case "name":
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case "released":
-          aValue = a.released || "";
-          bValue = b.released || "";
-          break;
-        case "rating":
-          aValue = a.rating || 0;
-          bValue = b.rating || 0;
-          break;
-        case "metacritic":
-          aValue = a.metacritic || 0;
-          bValue = b.metacritic || 0;
-          break;
-        case "userAddedAt":
-        default:
-          aValue = a.userAddedAt || 0;
-          bValue = b.userAddedAt || 0;
-          break;
-      }
-      
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-      }
-    });
-
-    const totalCount = games.length;
-    
-    // Apply pagination
-    const page = args.page || 1;
-    const itemsPerPage = args.itemsPerPage || 12;
-    const startIndex = (page - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedGames = games.slice(startIndex, endIndex);
-    const hasMore = endIndex < totalCount;
-
-    return {
-      games: paginatedGames,
-      totalCount,
-      hasMore,
-    };
-  },
-});
-
-export const getOwnedGamesInfo = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    const userGameRelations = await ctx.db
-      .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    if (userGameRelations.length === 0) return [];
-
-    const games = await Promise.all(
-      userGameRelations.map(async (rel) => {
-        const game = await ctx.db.get(rel.gameId);
-        return {
-          gameId: rel.gameId,
-          rawgId: game?.rawgId,
-          ownedOnSteam: rel.ownedOnSteam || false,
-          ownedOnEpic: rel.ownedOnEpic || false,
-          ownedOnGog: rel.ownedOnGog || false,
-        };
-      }),
+    const entries = Array.from(relByGameId.values());
+    const gameDocs = await Promise.all(
+      entries.map((entry) => ctx.db.get(entry.gameId)),
     );
 
-    return games.filter((g) => g.rawgId);
-  },
-});
+    const platformSet = new Set<string>();
+    const genreSet = new Set<string>();
+    const storeSet = new Set<StoreId | "no_store">();
+    const statusSet = new Set<GameStatus>();
+    const byStore: Record<string, number> = {};
+    const byStatus: Record<string, number> = {};
+    let noStore = 0;
 
-export const getGameById = query({
-  args: { gameId: v.id("games") },
-  handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-    
-    const game = await ctx.db.get(args.gameId);
-    if (!game) {
-      return null;
+    const games = [];
+
+    for (let i = 0; i < entries.length; i += 1) {
+      const rel = entries[i];
+      const game = gameDocs[i];
+      if (!game) continue;
+
+      for (const platform of game.platforms) platformSet.add(platform);
+      for (const genre of game.genres) genreSet.add(genre);
+
+      if (rel.stores.length === 0) {
+        noStore += 1;
+        storeSet.add("no_store");
+      } else {
+        for (const store of rel.stores) {
+          storeSet.add(store);
+          byStore[store] = (byStore[store] ?? 0) + 1;
+        }
+      }
+
+      if (rel.status) {
+        statusSet.add(rel.status);
+        byStatus[rel.status] = (byStatus[rel.status] ?? 0) + 1;
+      }
+
+      games.push({
+        _id: game._id,
+        rawgId: game.rawgId,
+        name: game.name,
+        slug: game.slug,
+        backgroundImage: game.backgroundImage,
+        released: game.released,
+        rating: game.rating,
+        metacritic: game.metacritic,
+        platforms: game.platforms,
+        genres: game.genres,
+        developers: game.developers,
+        publishers: game.publishers,
+        userAddedAt: rel.addedAt,
+        stores: rel.stores,
+        status: rel.status,
+        userRating: rel.userRating,
+        playtimeMinutes: rel.playtimeMinutes,
+      });
     }
 
-    // Check if user owns this game
-    const userGameRel = await ctx.db
-      .query("userGames")
-      .withIndex("by_user_and_game", (q) => 
-        q.eq("userId", user._id).eq("gameId", args.gameId)
-      )
-      .unique();
+    const orderedStores: Array<StoreId | "no_store"> = [
+      ...STORE_IDS.filter((id) => storeSet.has(id)),
+      ...(storeSet.has("no_store") ? (["no_store"] as const) : []),
+    ];
+
+    const orderedStatuses = GAME_STATUSES.filter((status) =>
+      statusSet.has(status),
+    );
 
     return {
-      ...game,
-      isOwned: !!userGameRel,
-      userAddedAt: userGameRel?.addedAt,
-      ownedOnSteam: userGameRel?.ownedOnSteam || false,
-      ownedOnEpic: userGameRel?.ownedOnEpic || false,
-      ownedOnGog: userGameRel?.ownedOnGog || false,
+      games,
+      facets: {
+        platforms: Array.from(platformSet).sort((a, b) => a.localeCompare(b)),
+        genres: Array.from(genreSet).sort((a, b) => a.localeCompare(b)),
+        stores: orderedStores,
+        statuses: orderedStatuses,
+      },
+      stats: {
+        total: games.length,
+        noStore,
+        byStore,
+        byStatus,
+      },
     };
   },
 });
 
-export const addGameToUser = mutation({
-  args: {
-    rawgId: v.number(),
-    name: v.string(),
-    slug: v.string(),
-    backgroundImage: v.optional(v.string()),
-    released: v.optional(v.string()),
-    rating: v.optional(v.number()),
-    metacritic: v.optional(v.number()),
-    platforms: v.array(v.string()),
-    genres: v.array(v.string()),
-    developers: v.array(v.string()),
-    publishers: v.array(v.string()),
-    esrbRating: v.optional(v.string()),
-    playtime: v.optional(v.number()),
-    description: v.optional(v.string()),
-    website: v.optional(v.string()),
-    tags: v.array(v.string()),
-    ownedOnSteam: v.optional(v.boolean()),
-    ownedOnEpic: v.optional(v.boolean()),
-    ownedOnGog: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-
-    // Check if game already exists in the games table
-    let existingGame = await ctx.db
-      .query("games")
-      .withIndex("by_rawg_id", (q) => q.eq("rawgId", args.rawgId))
-      .unique();
-
-    let gameId;
-    if (existingGame) {
-      gameId = existingGame._id;
-    } else {
-      // Create new game entry
-      gameId = await ctx.db.insert("games", {
-        ...args,
-        addedAt: Date.now(),
-      });
-    }
-
-    // This mutation should only be called when a user is adding a game to their
-    // collection for the first time. The `manageGame` action handles the logic
-    // of checking if the user already owns the game.
-    await ctx.db.insert("userGames", {
-      userId: user._id,
-      gameId,
-      addedAt: Date.now(),
-      ownedOnSteam: args.ownedOnSteam ?? false,
-      ownedOnEpic: args.ownedOnEpic ?? false,
-      ownedOnGog: args.ownedOnGog ?? false,
-    });
-
-    return gameId;
-  },
-});
-
-export const removeGameFromUser = mutation({
+export const getGameDetail = query({
   args: { gameId: v.id("games") },
-  handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
+  returns: v.union(
+    v.object({
+      _id: v.id("games"),
+      rawgId: v.number(),
+      steamAppId: v.optional(v.number()),
+      name: v.string(),
+      slug: v.string(),
+      backgroundImage: v.optional(v.string()),
+      released: v.optional(v.string()),
+      rating: v.optional(v.number()),
+      metacritic: v.optional(v.number()),
+      platforms: v.array(v.string()),
+      genres: v.array(v.string()),
+      developers: v.array(v.string()),
+      publishers: v.array(v.string()),
+      esrbRating: v.optional(v.string()),
+      playtime: v.optional(v.number()),
+      description: v.optional(v.string()),
+      website: v.optional(v.string()),
+      tags: v.array(v.string()),
+      metadataUpdatedAt: v.optional(v.number()),
+      isOwned: v.boolean(),
+      userAddedAt: v.optional(v.number()),
+      stores: v.array(storeIdValidator),
+      status: v.optional(gameStatusValidator),
+      userRating: v.optional(v.number()),
+      notes: v.optional(v.string()),
+      playtimeMinutes: v.optional(v.number()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, { gameId }) => {
+    const userId = await requireUserId(ctx);
+    const game = await ctx.db.get(gameId);
+    if (!game) return null;
 
-    const userGame = await ctx.db
+    const relations = await ctx.db
       .query("userGames")
       .withIndex("by_user_and_game", (q) =>
-        q.eq("userId", user._id).eq("gameId", args.gameId),
-      )
-      .unique();
-
-    if (!userGame) {
-      throw new Error("Game not found in your collection");
-    }
-
-    await ctx.db.delete(userGame._id);
-  },
-});
-
-export const updateGameOwnership = internalMutation({
-  args: {
-    userId: v.id("users"),
-    gameId: v.id("games"),
-    ownedOnSteam: v.boolean(),
-    ownedOnEpic: v.boolean(),
-    ownedOnGog: v.boolean(),
-  },
-  handler: async (ctx, args) => {
-    const userGames = await ctx.db
-      .query("userGames")
-      .withIndex("by_user_and_game", (q) =>
-        q.eq("userId", args.userId).eq("gameId", args.gameId),
+        q.eq("userId", userId).eq("gameId", gameId),
       )
       .collect();
 
-    if (userGames.length === 0) {
-      // This can happen in a race condition, it's fine to ignore.
-      return;
+    const primary = relations[0];
+    let stores: StoreId[] = [];
+    for (const rel of relations) {
+      stores = mergeStores(stores, getEffectiveStores(rel));
     }
 
-    // Handle duplicates: update the first, delete the rest
-    const [firstUserGame, ...otherUserGames] = userGames;
-    for (const other of otherUserGames) {
-      await ctx.db.delete(other._id);
-    }
-
-    await ctx.db.patch(firstUserGame._id, {
-      ownedOnSteam: args.ownedOnSteam,
-      ownedOnEpic: args.ownedOnEpic,
-      ownedOnGog: args.ownedOnGog,
-    });
+    return {
+      _id: game._id,
+      rawgId: game.rawgId,
+      steamAppId: game.steamAppId,
+      name: game.name,
+      slug: game.slug,
+      backgroundImage: game.backgroundImage,
+      released: game.released,
+      rating: game.rating,
+      metacritic: game.metacritic,
+      platforms: game.platforms,
+      genres: game.genres,
+      developers: game.developers,
+      publishers: game.publishers,
+      esrbRating: game.esrbRating,
+      playtime: game.playtime,
+      description: game.description,
+      website: game.website,
+      tags: game.tags,
+      metadataUpdatedAt: game.metadataUpdatedAt,
+      isOwned: relations.length > 0,
+      userAddedAt: primary?.addedAt,
+      stores,
+      status: primary?.status,
+      userRating: primary?.userRating,
+      notes: primary?.notes,
+      playtimeMinutes: primary?.playtimeMinutes,
+    };
   },
 });
 
-export const updateGameOwnershipFromDetail = mutation({
+export const updateUserGame = mutation({
   args: {
     gameId: v.id("games"),
-    ownedOnSteam: v.boolean(),
-    ownedOnEpic: v.boolean(),
-    ownedOnGog: v.boolean(),
+    stores: v.optional(v.array(storeIdValidator)),
+    status: v.optional(v.union(gameStatusValidator, v.null())),
+    userRating: v.optional(v.union(v.number(), v.null())),
+    notes: v.optional(v.union(v.string(), v.null())),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-    await ctx.runMutation(internal.games.updateGameOwnership, {
-      userId: user._id,
-      gameId: args.gameId,
-      ownedOnSteam: args.ownedOnSteam,
-      ownedOnEpic: args.ownedOnEpic,
-      ownedOnGog: args.ownedOnGog,
+    const userId = await requireUserId(ctx);
+
+    if (
+      args.userRating !== undefined &&
+      args.userRating !== null &&
+      (args.userRating < 1 || args.userRating > 5)
+    ) {
+      throw new Error("Personal rating must be between 1 and 5.");
+    }
+
+    const relations = await ctx.db
+      .query("userGames")
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", userId).eq("gameId", args.gameId),
+      )
+      .collect();
+
+    if (relations.length === 0) {
+      throw new Error("Game not found in your collection.");
+    }
+
+    const [primary, ...duplicates] = relations;
+    let currentStores = getEffectiveStores(primary);
+    for (const dup of duplicates) {
+      currentStores = mergeStores(currentStores, getEffectiveStores(dup));
+      await ctx.db.delete(dup._id);
+    }
+
+    const nextStores =
+      args.stores !== undefined ? normalizeStores(args.stores) : currentStores;
+
+    await ctx.db.patch(primary._id, {
+      stores: nextStores,
+      ownedOnSteam: undefined,
+      ownedOnEpic: undefined,
+      ownedOnGog: undefined,
+      ...(args.status !== undefined
+        ? { status: args.status ?? undefined }
+        : {}),
+      ...(args.userRating !== undefined
+        ? { userRating: args.userRating ?? undefined }
+        : {}),
+      ...(args.notes !== undefined
+        ? { notes: args.notes?.trim() ? args.notes.trim() : undefined }
+        : {}),
     });
+
+    return null;
   },
 });
 
-export const updateOwnedGameStores = mutation({
+export const updateOwnedGameByRawgId = mutation({
   args: {
     rawgId: v.number(),
-    ownedOnSteam: v.boolean(),
-    ownedOnEpic: v.boolean(),
-    ownedOnGog: v.boolean(),
+    stores: v.array(storeIdValidator),
+    status: v.optional(gameStatusValidator),
   },
+  returns: v.object({
+    gameId: v.id("games"),
+    alreadyOwned: v.boolean(),
+  }),
   handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-
+    const userId = await requireUserId(ctx);
     const game = await ctx.db
       .query("games")
       .withIndex("by_rawg_id", (q) => q.eq("rawgId", args.rawgId))
       .unique();
 
     if (!game) {
-      throw new Error("Game not found");
+      throw new Error("Game not found in catalog.");
     }
 
-    // Delegate to the main update function
-    await ctx.runMutation(internal.games.updateGameOwnership, {
-      userId: user._id,
+    return await linkExistingGameToUser(ctx, {
+      userId,
       gameId: game._id,
-      ownedOnSteam: args.ownedOnSteam,
-      ownedOnEpic: args.ownedOnEpic,
-      ownedOnGog: args.ownedOnGog,
+      stores: args.stores,
+      storeMergeMode: "replace",
+      status: args.status,
     });
   },
 });
 
-export const getUserPreferences = query({
+export const removeFromLibrary = mutation({
+  args: { gameId: v.id("games") },
+  returns: v.null(),
+  handler: async (ctx, { gameId }) => {
+    const userId = await requireUserId(ctx);
+    const relations = await ctx.db
+      .query("userGames")
+      .withIndex("by_user_and_game", (q) =>
+        q.eq("userId", userId).eq("gameId", gameId),
+      )
+      .collect();
+
+    if (relations.length === 0) {
+      throw new Error("Game not found in your collection.");
+    }
+
+    for (const rel of relations) {
+      await ctx.db.delete(rel._id);
+    }
+    return null;
+  },
+});
+
+export const getPreferences = query({
   args: {},
+  returns: v.object({
+    viewMode: v.union(v.literal("grid"), v.literal("table")),
+    visibleFields: v.array(v.string()),
+    itemsPerPage: v.number(),
+  }),
   handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    
-    const preferences = await ctx.db
+    const userId = await requireUserId(ctx);
+    const pref = await ctx.db
       .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
 
-    return preferences || {
-      viewMode: "grid" as const,
-      visibleFields: ["name", "platforms", "genres", "rating", "released"],
-      itemsPerPage: 12,
+    if (!pref) {
+      return {
+        viewMode: "grid" as const,
+        visibleFields: DEFAULT_VISIBLE_FIELDS,
+        itemsPerPage: 24,
+      };
+    }
+
+    return {
+      viewMode: pref.viewMode,
+      visibleFields: pref.visibleFields,
+      itemsPerPage: pref.itemsPerPage,
     };
   },
 });
 
-// Realtime progress: fetch an import job by id for live UI subscription
-export const getImportJob = query({
-  args: { jobId: v.optional(v.id("importJobs")) },
-  handler: async (ctx, args) => {
-    if (!args.jobId) return null;
-    const user = await getLoggedInUser(ctx);
-    const job = await ctx.db.get(args.jobId);
-    if (!job || job.userId !== user._id) {
-      return null;
-    }
-    return job;
-  },
-});
-
-export const updateUserPreferences = mutation({
+export const updatePreferences = mutation({
   args: {
     viewMode: v.optional(v.union(v.literal("grid"), v.literal("table"))),
     visibleFields: v.optional(v.array(v.string())),
     itemsPerPage: v.optional(v.number()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-    
-    const existingPreferences = await ctx.db
+    const userId = await requireUserId(ctx);
+    const existing = await ctx.db
       .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .unique();
 
-    if (existingPreferences) {
-      await ctx.db.patch(existingPreferences._id, {
-        ...(args.viewMode && { viewMode: args.viewMode }),
-        ...(args.visibleFields && { visibleFields: args.visibleFields }),
-        ...(args.itemsPerPage && { itemsPerPage: args.itemsPerPage }),
+    const safeItemsPerPage =
+      args.itemsPerPage !== undefined
+        ? Math.min(96, Math.max(12, Math.floor(args.itemsPerPage)))
+        : undefined;
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...(args.viewMode !== undefined ? { viewMode: args.viewMode } : {}),
+        ...(args.visibleFields !== undefined
+          ? { visibleFields: args.visibleFields }
+          : {}),
+        ...(safeItemsPerPage !== undefined
+          ? { itemsPerPage: safeItemsPerPage }
+          : {}),
       });
     } else {
       await ctx.db.insert("userPreferences", {
-        userId: user._id,
-        viewMode: args.viewMode || "grid",
-        visibleFields: args.visibleFields || ["name", "platforms", "genres", "rating", "released"],
-        itemsPerPage: args.itemsPerPage || 12,
+        userId,
+        viewMode: args.viewMode ?? "grid",
+        visibleFields: args.visibleFields ?? DEFAULT_VISIBLE_FIELDS,
+        itemsPerPage: safeItemsPerPage ?? 24,
       });
     }
-  },
-});
 
-export const getAllPlatforms = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    
-    // Get user's games
-    const userGameRelations = await ctx.db
-      .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const gameIds = userGameRelations.map(rel => rel.gameId);
-    const games = await Promise.all(
-      gameIds.map(gameId => ctx.db.get(gameId))
-    );
-
-    const platformSet = new Set<string>();
-    games.forEach((game: any) => {
-      if (game) {
-        game.platforms.forEach((platform: string) => platformSet.add(platform));
-      }
-    });
-
-    return Array.from(platformSet).sort();
-  },
-});
-
-export const getAllGenres = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    
-    // Get user's games
-    const userGameRelations = await ctx.db
-      .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const gameIds = userGameRelations.map(rel => rel.gameId);
-    const games = await Promise.all(
-      gameIds.map(gameId => ctx.db.get(gameId))
-    );
-
-    const genreSet = new Set<string>();
-    games.forEach((game: any) => {
-      if (game) {
-        game.genres.forEach((genre: string) => genreSet.add(genre));
-      }
-    });
-
-    return Array.from(genreSet).sort();
-  },
-});
-
-export const getAllStores = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    
-    // Get user's games
-    const userGameRelations = await ctx.db
-      .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const storeSet = new Set<string>();
-    userGameRelations.forEach(rel => {
-      if (rel.ownedOnSteam) storeSet.add("steam");
-      if (rel.ownedOnEpic) storeSet.add("epic");
-      if (rel.ownedOnGog) storeSet.add("gog");
-      if (!rel.ownedOnSteam && !rel.ownedOnEpic && !rel.ownedOnGog) storeSet.add("no_store");
-    });
-
-    return Array.from(storeSet).sort();
-  },
-});
-
-export const debugUserGames = query({
-  args: {},
-  handler: async (ctx) => {
-    const user = await getLoggedInUser(ctx);
-    
-    const userGameRelations = await ctx.db
-      .query("userGames")
-      .withIndex("by_user", (q) => q.eq("userId", user._id))
-      .collect();
-
-    const gameIds = userGameRelations.map(rel => rel.gameId);
-    const games = await Promise.all(
-      gameIds.map(gameId => ctx.db.get(gameId))
-    );
-
-    return {
-      userId: user._id,
-      userGameCount: userGameRelations.length,
-      gameIds,
-      userGameNames: games.filter((g): g is any => g !== null).map(g => g.name),
-    };
-  },
-});
-
-// Create an import job for progress tracking
-export const createImportJob = mutation({
-  args: {
-    type: v.union(v.literal("bulk"), v.literal("steam")),
-    total: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const user = await getLoggedInUser(ctx);
-    const now = Date.now();
-    const jobId = await ctx.db.insert("importJobs", {
-      userId: user._id,
-      type: args.type,
-      status: "running",
-      total: args.total,
-      completed: 0,
-      createdAt: now,
-      updatedAt: now,
-    });
-    return jobId;
-  },
-});
-
-// Internal helpers for actions to update progress
-export const updateImportJob = internalMutation({
-  args: {
-    jobId: v.id("importJobs"),
-    completed: v.optional(v.number()),
-    total: v.optional(v.number()),
-    status: v.optional(
-      v.union(
-        v.literal("pending"),
-        v.literal("running"),
-        v.literal("completed"),
-        v.literal("failed"),
-      ),
-    ),
-    error: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const job = await ctx.db.get(args.jobId);
-    if (!job) return;
-    await ctx.db.patch(args.jobId, {
-      ...(args.completed !== undefined ? { completed: args.completed } : {}),
-      ...(args.total !== undefined ? { total: args.total } : {}),
-      ...(args.status ? { status: args.status } : {}),
-      ...(args.error ? { error: args.error } : {}),
-      updatedAt: Date.now(),
-    });
-  },
-});
-
-export const completeImportJob = internalMutation({
-  args: { jobId: v.id("importJobs") },
-  handler: async (ctx, args) => {
-    const job = await ctx.db.get(args.jobId);
-    if (!job) return;
-    await ctx.db.patch(args.jobId, {
-      status: "completed",
-      updatedAt: Date.now(),
-    });
-  },
-});
-
-export const failImportJob = internalMutation({
-  args: { jobId: v.id("importJobs"), error: v.string() },
-  handler: async (ctx, args) => {
-    const job = await ctx.db.get(args.jobId);
-    if (!job) return;
-    await ctx.db.patch(args.jobId, {
-      status: "failed",
-      error: args.error,
-      updatedAt: Date.now(),
-    });
+    return null;
   },
 });
