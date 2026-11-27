@@ -35,7 +35,11 @@ import { AddGameDialog } from "@/features/imports/AddGameDialog";
 import { BulkImportDialog } from "@/features/imports/BulkImportDialog";
 import { ImportHistoryDialog } from "@/features/imports/ImportHistoryDialog";
 import { SteamImportDialog } from "@/features/imports/SteamImportDialog";
-import { filterAndSortGames, type LibraryGame } from "@/lib/catalog";
+import {
+  computeFacetCounts,
+  filterAndSortGames,
+  type LibraryGame,
+} from "@/lib/catalog";
 import { useDebounce } from "@/lib/hooks";
 import { useTheme } from "@/lib/themeContext";
 import { useCatalogUrlState } from "@/lib/urlState";
@@ -67,6 +71,7 @@ export function CatalogPage({
   const { signOut } = useAuthActions();
   const { theme, toggleTheme } = useTheme();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const catalogTopRef = useRef<HTMLDivElement>(null);
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -149,6 +154,25 @@ export function CatalogPage({
     [library?.games],
   );
 
+  const facetCounts = useMemo(
+    () =>
+      computeFacetCounts(library?.games ?? [], {
+        search: debouncedSearch,
+        platforms: urlState.platforms,
+        genres: urlState.genres,
+        stores: urlState.stores,
+        statuses: urlState.statuses,
+      }),
+    [
+      library?.games,
+      debouncedSearch,
+      urlState.platforms,
+      urlState.genres,
+      urlState.stores,
+      urlState.statuses,
+    ],
+  );
+
   const filteredGames = useMemo(
     () =>
       filterAndSortGames(library?.games ?? [], {
@@ -191,6 +215,20 @@ export function CatalogPage({
       void updatePreferences({ viewMode: mode });
     },
     [updatePreferences],
+  );
+
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      setPage(nextPage);
+      const anchor = catalogTopRef.current;
+      if (anchor) {
+        const top = anchor.getBoundingClientRect().top + window.scrollY - 80;
+        if (window.scrollY > top) {
+          window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+        }
+      }
+    },
+    [setPage],
   );
 
   const handleItemsPerPageChange = useCallback(
@@ -545,25 +583,22 @@ export function CatalogPage({
                 onToggleStatus={toggleStatus}
               />
 
-              <div className="space-y-3">
+              <div ref={catalogTopRef} className="space-y-2.5">
                 <CatalogToolbar
                   viewMode={viewMode}
                   onViewModeChange={handleViewModeChange}
-                  itemsPerPage={itemsPerPage}
-                  onItemsPerPageChange={handleItemsPerPageChange}
                   sortBy={urlState.sortBy}
                   sortOrder={urlState.sortOrder}
                   onSortChange={setSort}
                   platforms={library.facets.platforms}
                   genres={library.facets.genres}
                   stores={library.facets.stores}
-                  byStore={library.stats.byStore}
-                  noStoreCount={library.stats.noStore}
-                  byStatus={library.stats.byStatus}
+                  facetCounts={facetCounts}
                   selectedPlatforms={urlState.platforms}
                   selectedGenres={urlState.genres}
                   selectedStores={urlState.stores}
                   selectedStatuses={urlState.statuses}
+                  hasActiveFilters={activeFilterCount > 0}
                   onTogglePlatform={togglePlatform}
                   onToggleGenre={toggleGenre}
                   onToggleStore={toggleStore}
@@ -572,13 +607,12 @@ export function CatalogPage({
                   onClearGenres={clearGenres}
                   onClearStores={clearStores}
                   onClearStatuses={clearStatuses}
+                  onClearAllFilters={clearAllFilters}
                   visibleFields={visibleFields}
                   onToggleFieldVisibility={handleToggleFieldVisibility}
                 />
 
                 <FilterBar
-                  searchTerm={urlState.q}
-                  onSearchChange={setSearch}
                   selectedPlatforms={urlState.platforms}
                   selectedGenres={urlState.genres}
                   selectedStores={urlState.stores}
@@ -587,7 +621,6 @@ export function CatalogPage({
                   onToggleGenre={toggleGenre}
                   onToggleStore={toggleStore}
                   onToggleStatus={toggleStatus}
-                  onClearAll={clearAllFilters}
                 />
               </div>
 
@@ -662,7 +695,8 @@ export function CatalogPage({
                 currentPage={safePage}
                 totalItems={filteredGames.length}
                 itemsPerPage={itemsPerPage}
-                onPageChange={setPage}
+                onPageChange={handlePageChange}
+                onItemsPerPageChange={handleItemsPerPageChange}
               />
             </>
           )}

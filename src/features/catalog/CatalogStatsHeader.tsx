@@ -83,13 +83,13 @@ export function CatalogStatsHeader({
   const totalStoreEntries = storeSegments.reduce((sum, s) => sum + s.count, 0);
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-3.5">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
             {heading}
           </h1>
-          <p className="mt-1 text-sm text-ink-secondary">
+          <p className="mt-0.5 text-sm text-ink-secondary">
             {filteredCount === 0
               ? totalGames === 0
                 ? "Start adding games to populate your personal catalog"
@@ -101,12 +101,12 @@ export function CatalogStatsHeader({
 
       {/* High-signal metric cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+        <div className="rounded-xl border border-border-subtle bg-surface/85 px-4 py-3">
           <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
             <span>Total Library</span>
             <Gamepad2 className="size-4 text-primary" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-1.5 flex items-baseline gap-2">
             <span className="font-display text-2xl font-extrabold tabular-nums text-ink">
               {totalGames.toLocaleString()}
             </span>
@@ -116,12 +116,12 @@ export function CatalogStatsHeader({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+        <div className="rounded-xl border border-border-subtle bg-surface/85 px-4 py-3">
           <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
             <span>Tracked Playtime</span>
             <Clock className="size-4 text-amber-400" />
           </div>
-          <div className="mt-2 flex items-baseline gap-2">
+          <div className="mt-1.5 flex items-baseline gap-2">
             <span className="font-display text-2xl font-extrabold tabular-nums text-ink">
               {formatTotalHours(totalPlaytimeMinutes)}
             </span>
@@ -129,19 +129,19 @@ export function CatalogStatsHeader({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+        <div className="rounded-xl border border-border-subtle bg-surface/85 px-4 py-3">
           <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
             <span>Active &amp; Finished</span>
             <CheckCircle2 className="size-4 text-emerald-400" />
           </div>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-1.5 flex items-center gap-2">
             <button
               type="button"
               onClick={() => onToggleStatus("playing")}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
                 selectedStatuses.includes("playing")
-                  ? "border-sky-400/50 bg-sky-500/20 text-sky-300"
+                  ? "border-sky-400/50 bg-sky-500/20 text-sky-600 [html[data-theme='dark']_&]:text-sky-300"
                   : "border-border-subtle bg-surface-subtle text-ink hover:bg-surface-muted",
               )}
             >
@@ -155,7 +155,7 @@ export function CatalogStatsHeader({
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
                 selectedStatuses.includes("completed")
-                  ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
+                  ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-700 [html[data-theme='dark']_&]:text-emerald-300"
                   : "border-border-subtle bg-surface-subtle text-ink hover:bg-surface-muted",
               )}
             >
@@ -166,15 +166,15 @@ export function CatalogStatsHeader({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+        <div className="rounded-xl border border-border-subtle bg-surface/85 px-4 py-3">
           <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
             <span>Storefront Split</span>
             <Store className="size-4 text-violet-400" />
           </div>
           {storeSegments.length === 0 ? (
-            <p className="mt-3 text-xs text-ink-muted">No storefronts yet</p>
+            <p className="mt-2.5 text-xs text-ink-muted">No storefronts yet</p>
           ) : (
-            <div className="mt-2.5 space-y-2">
+            <div className="mt-2 space-y-2">
               <div className="flex h-2 w-full overflow-hidden rounded-full bg-surface-muted">
                 {storeSegments.map((seg) => (
                   <button
@@ -188,6 +188,9 @@ export function CatalogStatsHeader({
                     className={cn(
                       "h-full transition-opacity hover:opacity-80",
                       seg.barClass,
+                      selectedStores.length > 0 &&
+                        !selectedStores.includes(seg.id) &&
+                        "opacity-35",
                     )}
                   />
                 ))}
@@ -198,7 +201,12 @@ export function CatalogStatsHeader({
                     key={seg.id}
                     type="button"
                     onClick={() => onToggleStore(seg.id)}
-                    className="inline-flex items-center gap-1 text-[11px] font-medium text-ink-secondary transition-colors hover:text-ink"
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[11px] font-medium transition-colors hover:text-ink",
+                      selectedStores.includes(seg.id)
+                        ? "text-ink font-semibold"
+                        : "text-ink-secondary",
+                    )}
                   >
                     <span className={cn("size-1.5 rounded-full", seg.dotClass)} />
                     <span>{seg.label}</span>

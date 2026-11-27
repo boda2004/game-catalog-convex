@@ -17,7 +17,8 @@ export const DropdownMenuSeparator = ({
 export function DropdownMenuContent({
   className,
   align = "end",
-  sideOffset = 8,
+  sideOffset = 6,
+  collisionPadding = 8,
   ...props
 }: ComponentPropsWithoutRef<typeof RadixDropdown.Content>) {
   return (
@@ -25,8 +26,9 @@ export function DropdownMenuContent({
       <RadixDropdown.Content
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
-          "z-50 min-w-52 overflow-hidden rounded-xl border border-border-strong/80 bg-surface-elevated p-1.5 shadow-[0_16px_48px_rgba(0,0,0,0.4)] outline-hidden",
+          "popover-surface z-50 min-w-52 overflow-hidden rounded-xl border border-border-strong/90 bg-surface-elevated p-1.5 shadow-[0_18px_48px_rgba(0,0,0,0.42)] ring-1 ring-white/[0.04] outline-hidden",
           className,
         )}
         {...props}

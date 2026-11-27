@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Id } from "../../convex/_generated/dataModel";
 import {
+  computeFacetCounts,
   filterAndSortGames,
   formatPlaytime,
+  getDefaultSortOrder,
   type LibraryGame,
 } from "./catalog";
 import { parseCatalogUrl, serializeCatalogUrl } from "./urlState";
@@ -110,6 +112,53 @@ describe("filterAndSortGames", () => {
       sortOrder: "desc",
     });
     expect(result.map((g) => g.name)).toEqual(["Hades", "Cyberpunk 2077"]);
+  });
+});
+
+describe("computeFacetCounts", () => {
+  it("computes disjunctive counts across facets", () => {
+    const counts = computeFacetCounts(sampleGames, {
+      search: "",
+      platforms: [],
+      genres: ["RPG"],
+      stores: [],
+      statuses: [],
+    });
+
+    // Other facets are narrowed by RPG (only Cyberpunk 2077)
+    expect(counts.platforms).toEqual({ PC: 1, "PlayStation 5": 1 });
+    expect(counts.stores).toEqual({ gog: 1 });
+    expect(counts.statuses).toEqual({ playing: 1 });
+    // Genre itself retains OR semantics across all unfiltered genres
+    expect(counts.genres).toEqual({
+      Action: 2,
+      Indie: 2,
+      RPG: 1,
+      Platformer: 1,
+    });
+  });
+
+  it("narrows all facets when search is active", () => {
+    const counts = computeFacetCounts(sampleGames, {
+      search: "hollow",
+      platforms: [],
+      genres: [],
+      stores: [],
+      statuses: [],
+    });
+
+    expect(counts.platforms).toEqual({ PC: 1 });
+    expect(counts.genres).toEqual({ Platformer: 1, Indie: 1 });
+    expect(counts.stores).toEqual({ no_store: 1 });
+    expect(counts.statuses).toEqual({});
+  });
+});
+
+describe("getDefaultSortOrder", () => {
+  it("uses ascending for name and descending for numeric/date fields", () => {
+    expect(getDefaultSortOrder("name")).toBe("asc");
+    expect(getDefaultSortOrder("rating")).toBe("desc");
+    expect(getDefaultSortOrder("userAddedAt")).toBe("desc");
   });
 });
 
