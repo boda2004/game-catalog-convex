@@ -39,20 +39,18 @@ export function PaginationControls({
   };
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 rounded-xl border border-border-subtle bg-surface px-4 py-3 sm:flex-row">
-      <p className="text-sm text-ink-secondary">
-        Showing <span className="font-semibold text-ink">{startItem}</span>–
-        <span className="font-semibold text-ink">{endItem}</span> of{" "}
-        <span className="font-semibold text-ink">{totalItems}</span>
+    <div className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-surface/90 px-4 py-3 sm:flex-row">
+      <p className="text-xs text-ink-secondary">
+        Showing{" "}
+        <span className="font-mono font-semibold text-ink">{startItem}</span>–
+        <span className="font-mono font-semibold text-ink">{endItem}</span> of{" "}
+        <span className="font-mono font-semibold text-ink">{totalItems}</span>
       </p>
 
-      <nav
-        aria-label="Pagination"
-        className="inline-flex items-center gap-1"
-      >
+      <nav aria-label="Pagination" className="inline-flex items-center gap-1">
         <Button
           variant="secondary"
-          size="sm"
+          size="icon-sm"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
           aria-label="Previous page"
@@ -64,7 +62,7 @@ export function PaginationControls({
           item === "ellipsis" ? (
             <span
               key={`ellipsis-${idx}`}
-              className="px-2 text-sm text-ink-muted select-none"
+              className="select-none px-2 text-xs text-ink-muted"
             >
               …
             </span>
@@ -75,10 +73,10 @@ export function PaginationControls({
               onClick={() => onPageChange(item)}
               aria-current={item === currentPage ? "page" : undefined}
               className={cn(
-                "inline-flex h-8 min-w-8 items-center justify-center rounded-md border px-2 text-xs font-semibold transition-colors",
+                "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 font-mono text-xs font-semibold transition-all",
                 item === currentPage
-                  ? "border-primary bg-primary text-white"
-                  : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-subtle hover:text-ink",
+                  ? "border-primary bg-primary text-white shadow-xs"
+                  : "border-transparent bg-transparent text-ink-secondary hover:bg-surface-muted hover:text-ink",
               )}
             >
               {item}
@@ -88,7 +86,7 @@ export function PaginationControls({
 
         <Button
           variant="secondary"
-          size="sm"
+          size="icon-sm"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           aria-label="Next page"

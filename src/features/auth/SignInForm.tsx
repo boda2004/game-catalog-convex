@@ -3,11 +3,19 @@ import {
   useSignUpWithEmailPassword,
   useStartPasswordRecovery,
 } from "@convex-dev/auth/methods/email-password/react";
-import { MailCheck } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  MailCheck,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/utils";
 import { formatAuthError } from "./authErrors";
 
 type AuthFlow = "signIn" | "signUp" | "reset";
@@ -21,6 +29,7 @@ export function SignInForm() {
   const [flow, setFlow] = useState<AuthFlow>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [sentNotice, setSentNotice] = useState<{
     kind: "signUp" | "reset";
     email: string;
@@ -31,12 +40,14 @@ export function SignInForm() {
 
   if (sentNotice !== null) {
     return (
-      <div className="w-full rounded-xl border border-border-subtle bg-surface p-6 text-center shadow-xs">
-        <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-xl bg-primary-soft text-primary-soft-ink">
-          <MailCheck className="size-6" />
+      <div className="w-full rounded-2xl border border-border-strong/70 bg-surface p-7 text-center shadow-2xl">
+        <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary-soft text-primary-soft-ink ring-1 ring-inset ring-primary/30">
+          <MailCheck className="size-7" />
         </div>
-        <h2 className="text-lg font-semibold text-ink">Check your email</h2>
-        <p className="mt-2 text-sm text-ink-secondary">
+        <h2 className="font-display text-xl font-bold text-ink">
+          Check your inbox
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
           {sentNotice.kind === "signUp"
             ? `We sent a verification link to ${sentNotice.email}. Open it in this browser to finish creating your account.`
             : `We sent a password reset link to ${sentNotice.email}. Open it in this browser within 10 minutes to set a new password.`}
@@ -44,7 +55,7 @@ export function SignInForm() {
         <Button
           variant="primary"
           size="lg"
-          className="mt-5 w-full"
+          className="mt-6 w-full"
           onClick={() => {
             setSentNotice(null);
             setPassword("");
@@ -58,26 +69,72 @@ export function SignInForm() {
   }
 
   return (
-    <div className="w-full rounded-xl border border-border-subtle bg-surface p-6 shadow-xs">
+    <div className="w-full rounded-2xl border border-border-strong/70 bg-surface p-6 shadow-2xl sm:p-7">
+      {isAuthFlow ? (
+        <div
+          role="tablist"
+          aria-label="Authentication mode"
+          className="mb-6 grid grid-cols-2 rounded-xl border border-border-subtle bg-surface-subtle p-1"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={flow === "signIn"}
+            onClick={() => setFlow("signIn")}
+            className={cn(
+              "rounded-lg py-2 text-sm font-semibold transition-all",
+              flow === "signIn"
+                ? "bg-surface-elevated text-ink shadow-xs ring-1 ring-inset ring-border-subtle"
+                : "text-ink-muted hover:text-ink",
+            )}
+          >
+            Sign in
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={flow === "signUp"}
+            onClick={() => setFlow("signUp")}
+            className={cn(
+              "rounded-lg py-2 text-sm font-semibold transition-all",
+              flow === "signUp"
+                ? "bg-surface-elevated text-ink shadow-xs ring-1 ring-inset ring-border-subtle"
+                : "text-ink-muted hover:text-ink",
+            )}
+          >
+            Create account
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setFlow("signIn")}
+          className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
+        >
+          <ArrowLeft className="size-3.5" />
+          Back to sign in
+        </button>
+      )}
+
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-ink">
+        <h2 className="font-display text-xl font-bold tracking-tight text-ink">
           {flow === "signIn"
-            ? "Sign in to your library"
+            ? "Welcome back"
             : flow === "signUp"
-              ? "Create your account"
+              ? "Start your library"
               : "Reset your password"}
         </h2>
         <p className="mt-1 text-sm text-ink-secondary">
           {flow === "signIn"
-            ? "Enter your email and password to continue."
+            ? "Sign in with your email and password."
             : flow === "signUp"
-              ? "Passwords must be at least 10 characters."
-              : "We will send a 10-minute reset link to your verified email."}
+              ? "Use a strong password of at least 10 characters."
+              : "We'll email you a 10-minute recovery link."}
         </p>
       </div>
 
       <form
-        className="flex flex-col gap-3.5"
+        className="flex flex-col gap-4"
         onSubmit={(e) => {
           e.preventDefault();
           void (async () => {
@@ -111,40 +168,70 @@ export function SignInForm() {
         }}
       >
         <label className="space-y-1.5">
-          <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            Email
+          <span className="block text-xs font-semibold text-ink-secondary">
+            Email address
           </span>
-          <input
-            className="input-field"
-            type="email"
-            name="email"
-            autoComplete="username"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={pending}
-            required
-          />
+          <div className="relative">
+            <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
+            <input
+              className="input-field pl-10"
+              type="email"
+              name="email"
+              autoComplete="username"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={pending}
+              required
+            />
+          </div>
         </label>
 
         {isAuthFlow && (
           <label className="space-y-1.5">
-            <span className="block text-xs font-semibold uppercase tracking-wide text-ink-muted">
-              Password
-            </span>
-            <input
-              className="input-field"
-              type="password"
-              name="password"
-              autoComplete={
-                flow === "signUp" ? "new-password" : "current-password"
-              }
-              placeholder="••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={pending}
-              required
-            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-ink-secondary">
+                Password
+              </span>
+              {flow === "signIn" && (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary-soft-ink transition-colors hover:underline"
+                  onClick={() => setFlow("reset")}
+                >
+                  Forgot password?
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
+              <input
+                className="input-field pl-10 pr-10"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete={
+                  flow === "signUp" ? "new-password" : "current-password"
+                }
+                placeholder="••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={pending}
+                required
+              />
+              <button
+                type="button"
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-muted transition-colors hover:text-ink"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
           </label>
         )}
 
@@ -163,39 +250,6 @@ export function SignInForm() {
                 ? "Create account"
                 : "Send reset link"}
         </Button>
-
-        <div className="mt-2 flex flex-col items-center gap-2 text-sm text-ink-secondary">
-          {isAuthFlow ? (
-            <>
-              <button
-                type="button"
-                className="font-medium text-primary hover:text-primary-hover hover:underline"
-                onClick={() =>
-                  setFlow(flow === "signIn" ? "signUp" : "signIn")
-                }
-              >
-                {flow === "signIn"
-                  ? "Need an account? Sign up"
-                  : "Already have an account? Sign in"}
-              </button>
-              <button
-                type="button"
-                className="text-xs font-medium text-ink-muted hover:text-primary hover:underline"
-                onClick={() => setFlow("reset")}
-              >
-                Forgot your password?
-              </button>
-            </>
-          ) : (
-            <button
-              type="button"
-              className="font-medium text-primary hover:text-primary-hover hover:underline"
-              onClick={() => setFlow("signIn")}
-            >
-              Back to sign in
-            </button>
-          )}
-        </div>
       </form>
     </div>
   );

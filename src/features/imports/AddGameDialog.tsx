@@ -14,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/Dialog";
-import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
 import {
   GAME_STATUSES,
@@ -22,6 +21,7 @@ import {
   STORE_IDS,
   STORE_META,
   formatReleaseYear,
+  getMetacriticClass,
   type GameStatus,
   type LibraryGame,
   type StoreId,
@@ -58,7 +58,7 @@ export function AddGameDialog({
   const [isSaving, setIsSaving] = useState(false);
   const [selected, setSelected] = useState<SearchResult | null>(null);
   const [stores, setStores] = useState<StoreId[]>([]);
-  const [status, setStatus] = useState<GameStatus | "none">("none");
+  const [status, setStatus] = useState<GameStatus | null>(null);
 
   const searchExternal = useAction(api.catalogActions.searchExternalGames);
   const addGame = useAction(api.catalogActions.addGameByRawgId);
@@ -70,7 +70,7 @@ export function AddGameDialog({
     setHasSearched(false);
     setSelected(null);
     setStores([]);
-    setStatus("none");
+    setStatus(null);
   };
 
   const handleSearch = async () => {
@@ -96,10 +96,10 @@ export function AddGameDialog({
     const existing = ownedByRawgId.get(game.rawgId);
     if (existing) {
       setStores(existing.stores);
-      setStatus(existing.status ?? "none");
+      setStatus(existing.status ?? null);
     } else {
       setStores([]);
-      setStatus("none");
+      setStatus(null);
     }
   };
 
@@ -114,7 +114,7 @@ export function AddGameDialog({
     setIsSaving(true);
     const isExisting = ownedByRawgId.has(selected.rawgId);
     try {
-      const nextStatus = status === "none" ? undefined : status;
+      const nextStatus = status ?? undefined;
       if (isExisting) {
         await updateOwned({
           rawgId: selected.rawgId,
@@ -151,12 +151,12 @@ export function AddGameDialog({
     >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-ink">
+          <DialogTitle className="font-display text-lg font-bold text-ink">
             Add or Update Game
           </DialogTitle>
           <DialogDescription className="mt-0.5 text-sm text-ink-secondary">
-            Search the RAWG catalog, pick a title, and assign your stores and
-            status.
+            Search the RAWG database, pick a title, and assign storefronts and
+            play status.
           </DialogDescription>
           <form
             className="mt-4 flex gap-2"
@@ -166,13 +166,13 @@ export function AddGameDialog({
             }}
           >
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-muted" />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by game title..."
-                className="input-field pl-9"
+                placeholder="Search by game title (e.g. Hades, Elden Ring)..."
+                className="input-field pl-10"
                 autoFocus
               />
             </div>
@@ -182,15 +182,19 @@ export function AddGameDialog({
               size="lg"
               disabled={isSearching || !query.trim()}
             >
-              {isSearching ? <Spinner className="size-4 border-white/40 border-b-white" /> : "Search"}
+              {isSearching ? (
+                <Spinner className="size-4 border-white/35 border-t-white" />
+              ) : (
+                "Search"
+              )}
             </Button>
           </form>
         </DialogHeader>
 
         <DialogBody className="space-y-3">
           {isSearching ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-12">
-              <Spinner />
+            <div className="flex flex-col items-center justify-center gap-3 py-14">
+              <Spinner className="size-7" />
               <p className="text-sm text-ink-secondary">Searching RAWG...</p>
             </div>
           ) : results.length > 0 ? (
@@ -203,18 +207,18 @@ export function AddGameDialog({
                 <div
                   key={game.rawgId}
                   className={cn(
-                    "rounded-xl border p-3.5 transition-colors",
+                    "overflow-hidden rounded-2xl border transition-all",
                     isSelected
-                      ? "border-primary bg-primary-soft/25"
-                      : "border-border-subtle bg-surface hover:border-border-strong",
+                      ? "border-primary bg-primary-soft/25 ring-1 ring-inset ring-primary/30"
+                      : "border-border-subtle bg-surface-subtle/40 hover:border-border-strong",
                   )}
                 >
                   <button
                     type="button"
                     onClick={() => handleSelectGame(game)}
-                    className="flex w-full items-start gap-3.5 text-left"
+                    className="flex w-full items-center gap-4 p-3.5 text-left"
                   >
-                    <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-surface-muted">
+                    <div className="h-16 w-24 shrink-0 overflow-hidden rounded-xl border border-border-subtle bg-surface-muted">
                       {game.backgroundImage ? (
                         <img
                           src={game.backgroundImage}
@@ -229,21 +233,31 @@ export function AddGameDialog({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate font-semibold text-ink">
+                        <h3 className="font-display truncate text-sm font-bold text-ink">
                           {game.name}
                         </h3>
                         {isOwned && <Badge tone="success">In library</Badge>}
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-ink-secondary">
-                        {year && <span>{year}</span>}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2.5 text-xs text-ink-secondary">
+                        {year && <span className="font-mono">{year}</span>}
                         {game.rating !== undefined && game.rating > 0 && (
-                          <span className="inline-flex items-center gap-1">
-                            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                          <span className="inline-flex items-center gap-1 font-mono font-semibold text-ink">
+                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
                             {game.rating.toFixed(1)}
                           </span>
                         )}
+                        {game.metacritic !== undefined && (
+                          <span
+                            className={cn(
+                              "rounded px-1.5 py-0.5 font-mono text-[10px] font-bold",
+                              getMetacriticClass(game.metacritic),
+                            )}
+                          >
+                            {game.metacritic}
+                          </span>
+                        )}
                         {game.platforms.length > 0 && (
-                          <span className="truncate">
+                          <span className="truncate text-ink-muted">
                             {game.platforms.slice(0, 4).join(", ")}
                             {game.platforms.length > 4 &&
                               ` +${game.platforms.length - 4}`}
@@ -254,9 +268,9 @@ export function AddGameDialog({
                   </button>
 
                   {isSelected && (
-                    <div className="mt-3.5 space-y-3 border-t border-border-subtle pt-3.5">
+                    <div className="space-y-4 border-t border-border-subtle/80 bg-surface/70 px-4 py-4">
                       <div>
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.07em] text-ink-muted">
                           Owned on stores
                         </p>
                         <div className="flex flex-wrap gap-1.5">
@@ -268,13 +282,22 @@ export function AddGameDialog({
                                 type="button"
                                 onClick={() => toggleStore(storeId)}
                                 className={cn(
-                                  "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors",
+                                  "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all",
                                   active
                                     ? "border-primary bg-primary text-white"
-                                    : "border-border-strong bg-surface text-ink-secondary hover:bg-surface-subtle",
+                                    : "border-border-strong/75 bg-surface text-ink-secondary hover:bg-surface-muted hover:text-ink",
                                 )}
                               >
-                                {active && <Check className="size-3" />}
+                                {active ? (
+                                  <Check className="size-3 stroke-[3]" />
+                                ) : (
+                                  <span
+                                    className={cn(
+                                      "size-1.5 rounded-full",
+                                      STORE_META[storeId].dotClass,
+                                    )}
+                                  />
+                                )}
                                 {STORE_META[storeId].label}
                               </button>
                             );
@@ -282,23 +305,38 @@ export function AddGameDialog({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                          Status
-                        </span>
-                        <Select
-                          value={status}
-                          onValueChange={setStatus}
-                          ariaLabel="Play status"
-                          className="w-44"
-                          options={[
-                            { value: "none" as const, label: "No status" },
-                            ...GAME_STATUSES.map((s) => ({
-                              value: s,
-                              label: STATUS_META[s].label,
-                            })),
-                          ]}
-                        />
+                      <div>
+                        <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.07em] text-ink-muted">
+                          Play status (optional)
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {GAME_STATUSES.map((s) => {
+                            const active = status === s;
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => setStatus(active ? null : s)}
+                                className={cn(
+                                  "inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1.5 text-xs font-semibold transition-all",
+                                  active
+                                    ? "border-primary bg-primary text-white"
+                                    : "border-border-strong/75 bg-surface text-ink-secondary hover:bg-surface-muted hover:text-ink",
+                                )}
+                              >
+                                <span
+                                  className={cn(
+                                    "size-1.5 rounded-full",
+                                    active
+                                      ? "bg-white"
+                                      : STATUS_META[s].dotClass,
+                                  )}
+                                />
+                                {STATUS_META[s].label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -306,13 +344,23 @@ export function AddGameDialog({
               );
             })
           ) : hasSearched ? (
-            <p className="py-10 text-center text-sm text-ink-muted">
-              No games found for &ldquo;{query}&rdquo;. Try another title.
-            </p>
+            <div className="py-12 text-center">
+              <p className="text-sm font-medium text-ink">
+                No games found for &ldquo;{query}&rdquo;
+              </p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Try a shorter title or check the spelling.
+              </p>
+            </div>
           ) : (
-            <p className="py-10 text-center text-sm text-ink-muted">
-              Search for a game above to add it to your collection.
-            </p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-surface-subtle text-ink-muted">
+                <Search className="size-5" />
+              </div>
+              <p className="text-sm font-medium text-ink-secondary">
+                Search RAWG above to find and add games to your vault.
+              </p>
+            </div>
           )}
         </DialogBody>
 

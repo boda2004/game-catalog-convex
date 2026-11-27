@@ -5,6 +5,7 @@ import {
   STORE_META,
   formatDate,
   formatPlaytime,
+  getMetacriticClass,
   type LibraryGame,
   type SortField,
   type SortOrder,
@@ -47,12 +48,12 @@ export function GameTable({
   const allColumns: ColumnConfig[] = [
     {
       id: "name",
-      header: "Name",
+      header: "Title",
       sortField: "name",
       nowrap: false,
       render: (game) => (
-        <div className="flex min-w-[220px] items-center gap-3">
-          <div className="h-9 w-14 shrink-0 overflow-hidden rounded-md bg-surface-muted">
+        <div className="flex min-w-[230px] items-center gap-3">
+          <div className="h-10 w-16 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted">
             {game.backgroundImage ? (
               <img
                 src={game.backgroundImage}
@@ -66,7 +67,9 @@ export function GameTable({
               </div>
             )}
           </div>
-          <span className="font-semibold text-ink">{game.name}</span>
+          <span className="font-display text-sm font-bold text-ink group-hover:text-primary">
+            {game.name}
+          </span>
         </div>
       ),
     },
@@ -85,17 +88,17 @@ export function GameTable({
                 onTogglePlatform(platform);
               }}
               className={cn(
-                "rounded-md px-2 py-0.5 text-xs font-semibold transition-colors",
+                "rounded-md px-2 py-0.5 text-[11px] font-semibold transition-colors",
                 selectedPlatforms.includes(platform)
                   ? "bg-primary text-white"
-                  : "bg-primary-soft text-primary-soft-ink hover:opacity-85",
+                  : "bg-primary-soft text-primary-soft-ink hover:opacity-80",
               )}
             >
               {platform}
             </button>
           ))}
           {game.platforms.length > 2 && (
-            <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-xs font-semibold text-ink-muted">
+            <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-[11px] font-semibold text-ink-muted">
               +{game.platforms.length - 2}
             </span>
           )}
@@ -117,17 +120,17 @@ export function GameTable({
                 onToggleGenre(genre);
               }}
               className={cn(
-                "rounded-md px-2 py-0.5 text-xs font-semibold transition-colors",
+                "rounded-md px-2 py-0.5 text-[11px] font-semibold transition-colors",
                 selectedGenres.includes(genre)
-                  ? "bg-ink-secondary text-white"
-                  : "bg-surface-subtle text-ink-secondary ring-1 ring-inset ring-border-subtle hover:bg-surface-muted",
+                  ? "bg-primary text-white"
+                  : "bg-surface-subtle text-ink-secondary ring-1 ring-inset ring-border-subtle hover:bg-surface-muted hover:text-ink",
               )}
             >
               {genre}
             </button>
           ))}
           {game.genres.length > 2 && (
-            <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-xs font-semibold text-ink-muted">
+            <span className="rounded-md bg-surface-subtle px-1.5 py-0.5 text-[11px] font-semibold text-ink-muted">
               +{game.genres.length - 2}
             </span>
           )}
@@ -147,10 +150,16 @@ export function GameTable({
               <span
                 key={store}
                 className={cn(
-                  "rounded-md px-2 py-0.5 text-xs font-semibold",
+                  "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold",
                   STORE_META[store].badgeClass,
                 )}
               >
+                <span
+                  className={cn(
+                    "size-1.5 rounded-full",
+                    STORE_META[store].dotClass,
+                  )}
+                />
                 {STORE_META[store].shortLabel}
               </span>
             ))}
@@ -167,10 +176,16 @@ export function GameTable({
         ) : (
           <span
             className={cn(
-              "rounded-md px-2 py-0.5 text-xs font-semibold",
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold",
               STATUS_META[game.status].badgeClass,
             )}
           >
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                STATUS_META[game.status].dotClass,
+              )}
+            />
             {STATUS_META[game.status].label}
           </span>
         ),
@@ -182,8 +197,8 @@ export function GameTable({
       nowrap: true,
       render: (game) =>
         game.rating ? (
-          <span className="inline-flex items-center gap-1 text-sm font-medium tabular-nums text-ink">
-            <Star className="size-3.5 fill-amber-500 text-amber-500" />
+          <span className="inline-flex items-center gap-1 font-mono text-xs font-semibold tabular-nums text-ink">
+            <Star className="size-3.5 fill-amber-400 text-amber-400" />
             {game.rating.toFixed(1)}
           </span>
         ) : (
@@ -197,7 +212,12 @@ export function GameTable({
       nowrap: true,
       render: (game) =>
         game.metacritic ? (
-          <span className="inline-flex rounded-md bg-success-soft px-2 py-0.5 text-xs font-bold tabular-nums text-success">
+          <span
+            className={cn(
+              "inline-flex rounded-md px-2 py-0.5 font-mono text-xs font-bold tabular-nums",
+              getMetacriticClass(game.metacritic),
+            )}
+          >
             {game.metacritic}
           </span>
         ) : (
@@ -211,7 +231,8 @@ export function GameTable({
       nowrap: true,
       render: (game) =>
         game.userRating ? (
-          <span className="text-sm font-semibold tabular-nums text-ink">
+          <span className="inline-flex items-center gap-1 font-mono text-xs font-bold tabular-nums text-amber-400">
+            <Star className="size-3 fill-amber-400 text-amber-400" />
             {game.userRating}/5
           </span>
         ) : (
@@ -226,7 +247,7 @@ export function GameTable({
       render: (game) => {
         const formatted = formatPlaytime(game.playtimeMinutes);
         return formatted ? (
-          <span className="text-sm tabular-nums text-ink-secondary">
+          <span className="font-mono text-xs tabular-nums text-ink-secondary">
             {formatted}
           </span>
         ) : (
@@ -240,7 +261,7 @@ export function GameTable({
       sortField: "released",
       nowrap: true,
       render: (game) => (
-        <span className="text-sm tabular-nums text-ink-secondary">
+        <span className="text-xs tabular-nums text-ink-secondary">
           {formatDate(game.released) ?? "—"}
         </span>
       ),
@@ -250,7 +271,7 @@ export function GameTable({
       header: "Developer",
       nowrap: true,
       render: (game) => (
-        <span className="text-sm text-ink-secondary">
+        <span className="text-xs text-ink-secondary">
           {game.developers.length > 0
             ? `${game.developers.slice(0, 2).join(", ")}${game.developers.length > 2 ? ` +${game.developers.length - 2}` : ""}`
             : "—"}
@@ -262,7 +283,7 @@ export function GameTable({
       header: "Publisher",
       nowrap: true,
       render: (game) => (
-        <span className="text-sm text-ink-secondary">
+        <span className="text-xs text-ink-secondary">
           {game.publishers.length > 0
             ? `${game.publishers.slice(0, 2).join(", ")}${game.publishers.length > 2 ? ` +${game.publishers.length - 2}` : ""}`
             : "—"}
@@ -275,7 +296,7 @@ export function GameTable({
       sortField: "userAddedAt",
       nowrap: true,
       render: (game) => (
-        <span className="text-sm tabular-nums text-ink-secondary">
+        <span className="text-xs tabular-nums text-ink-secondary">
           {formatDate(game.userAddedAt) ?? "—"}
         </span>
       ),
@@ -295,10 +316,10 @@ export function GameTable({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface">
+    <div className="overflow-hidden rounded-2xl border border-border-subtle bg-surface">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-border-subtle">
-          <thead className="bg-surface-subtle">
+          <thead className="bg-surface-subtle/80">
             <tr>
               {visibleColumns.map((col) => {
                 const isSorted = col.sortField === sortBy;
@@ -307,9 +328,9 @@ export function GameTable({
                     key={col.id}
                     scope="col"
                     className={cn(
-                      "whitespace-nowrap px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-ink-muted",
+                      "whitespace-nowrap px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.07em] text-ink-muted",
                       col.sortField &&
-                        "cursor-pointer select-none hover:bg-surface-muted hover:text-ink",
+                        "cursor-pointer select-none transition-colors hover:bg-surface-muted/70 hover:text-ink",
                     )}
                     onClick={() => handleHeaderSort(col.sortField)}
                   >
@@ -327,12 +348,12 @@ export function GameTable({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border-subtle bg-surface">
+          <tbody className="divide-y divide-border-subtle/70">
             {games.map((game) => (
               <tr
                 key={game._id}
                 onClick={() => onSelectGame(game._id)}
-                className="cursor-pointer transition-colors hover:bg-surface-subtle/60"
+                className="group cursor-pointer transition-colors hover:bg-surface-subtle/70"
               >
                 {visibleColumns.map((col) => (
                   <td

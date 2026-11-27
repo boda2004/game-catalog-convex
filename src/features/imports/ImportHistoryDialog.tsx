@@ -1,5 +1,12 @@
 import { useQuery } from "convex/react";
-import { ChevronLeft, Clock, History } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  CloudDownload,
+  History,
+  ListPlus,
+} from "lucide-react";
 import { useState } from "react";
 import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
@@ -15,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { Spinner } from "@/components/ui/Spinner";
-import { cn } from "@/lib/utils";
+import { ImportProgressView } from "./ImportProgressView";
 
 export function ImportHistoryDialog({
   open,
@@ -43,12 +50,12 @@ export function ImportHistoryDialog({
     >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {selectedJobId && (
               <Button
                 variant="ghost"
-                size="icon"
-                className="-ml-2 size-8"
+                size="icon-sm"
+                className="-ml-1.5"
                 onClick={() => setSelectedJobId(null)}
                 aria-label="Back to import history"
               >
@@ -56,13 +63,13 @@ export function ImportHistoryDialog({
               </Button>
             )}
             <div>
-              <DialogTitle className="text-lg font-semibold text-ink">
+              <DialogTitle className="font-display text-lg font-bold text-ink">
                 {selectedJobId ? "Import Details" : "Import History"}
               </DialogTitle>
-              <DialogDescription className="mt-0.5 text-sm text-ink-secondary">
+              <DialogDescription className="text-xs text-ink-secondary">
                 {selectedJobId
                   ? "Per-title import outcomes persisted on the server."
-                  : "Track running background imports and review previous runs."}
+                  : "Track live background imports and inspect past runs."}
               </DialogDescription>
             </div>
           </div>
@@ -71,108 +78,30 @@ export function ImportHistoryDialog({
         <DialogBody>
           {selectedJobId ? (
             !detail ? (
-              <div className="flex justify-center py-10">
+              <div className="flex justify-center py-12">
                 <Spinner />
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="rounded-xl border border-border-subtle bg-surface-subtle p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-ink">
-                      {detail.job.type === "steam"
-                        ? "Steam Import"
-                        : "Bulk Import"}
-                      {detail.job.sourceLabel
-                        ? ` — ${detail.job.sourceLabel}`
-                        : ""}
-                    </span>
-                    <Badge
-                      tone={
-                        detail.job.status === "completed"
-                          ? "success"
-                          : detail.job.status === "failed"
-                            ? "danger"
-                            : "primary"
-                      }
-                    >
-                      {detail.job.status}
-                    </Badge>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-2 text-xs">
-                    <Badge tone="neutral">
-                      {detail.job.completed}/{detail.job.total} processed
-                    </Badge>
-                    <Badge tone="success">{detail.job.addedCount} added</Badge>
-                    <Badge tone="warning">
-                      {detail.job.updatedCount} updated
-                    </Badge>
-                    {detail.job.failedCount > 0 && (
-                      <Badge tone="danger">
-                        {detail.job.failedCount} failed
-                      </Badge>
-                    )}
-                  </div>
-                  {detail.job.error && (
-                    <p className="mt-2 text-xs text-danger">
-                      {detail.job.error}
-                    </p>
-                  )}
-                </div>
-
-                {detail.items.length === 0 ? (
-                  <p className="py-6 text-center text-sm text-ink-muted">
-                    No per-game records stored for this job.
-                  </p>
-                ) : (
-                  <div className="divide-y divide-border-subtle rounded-xl border border-border-subtle">
-                    {detail.items.map((item) => (
-                      <div
-                        key={item._id}
-                        className="flex items-center justify-between gap-3 px-3.5 py-2.5 text-sm"
-                      >
-                        <div className="min-w-0">
-                          <p className="truncate font-medium text-ink">
-                            {item.queryName}
-                          </p>
-                          {item.matchedGameName &&
-                            item.matchedGameName !== item.queryName && (
-                              <p className="truncate text-xs text-ink-muted">
-                                Matched: {item.matchedGameName}
-                              </p>
-                            )}
-                          {item.error && (
-                            <p className="truncate text-xs text-danger">
-                              {item.error}
-                            </p>
-                          )}
-                        </div>
-                        <Badge
-                          tone={
-                            item.status === "added"
-                              ? "success"
-                              : item.status === "updated"
-                                ? "warning"
-                                : "danger"
-                          }
-                        >
-                          {item.status === "not_found"
-                            ? "Not found"
-                            : item.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <ImportProgressView
+                job={detail.job}
+                items={detail.items}
+                titleOverride={`${detail.job.type === "steam" ? "Steam Import" : "Bulk Import"}${detail.job.sourceLabel ? ` · ${detail.job.sourceLabel}` : ""}`}
+              />
             )
           ) : !jobs ? (
-            <div className="flex justify-center py-10">
+            <div className="flex justify-center py-12">
               <Spinner />
             </div>
           ) : jobs.length === 0 ? (
-            <div className="py-10 text-center">
-              <History className="mx-auto mb-2 size-8 text-ink-muted" />
-              <p className="text-sm text-ink-secondary">No imports yet.</p>
+            <div className="flex flex-col items-center py-12 text-center">
+              <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-surface-subtle text-ink-muted">
+                <History className="size-5" />
+              </div>
+              <p className="text-sm font-semibold text-ink">No imports yet</p>
+              <p className="mt-1 text-xs text-ink-muted">
+                Steam and bulk imports will appear here with full per-title
+                logs.
+              </p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -186,41 +115,55 @@ export function ImportHistoryDialog({
                     key={job._id}
                     type="button"
                     onClick={() => setSelectedJobId(job._id)}
-                    className="w-full rounded-xl border border-border-subtle bg-surface p-3.5 text-left transition-colors hover:border-border-strong hover:bg-surface-subtle/50"
+                    className="group w-full rounded-2xl border border-border-subtle bg-surface-subtle/50 p-4 text-left transition-all hover:border-border-strong hover:bg-surface-subtle"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink">
-                          {job.type === "steam"
-                            ? "Steam Import"
-                            : "Bulk Import"}
-                          {job.sourceLabel ? ` · ${job.sourceLabel}` : ""}
-                        </p>
-                        <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-ink-muted">
-                          <Clock className="size-3" />
-                          {new Date(job.createdAt).toLocaleString()}
-                        </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-elevated text-ink-secondary ring-1 ring-inset ring-border-subtle">
+                          {job.type === "steam" ? (
+                            <CloudDownload className="size-4 text-sky-400" />
+                          ) : (
+                            <ListPlus className="size-4 text-violet-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-bold text-ink">
+                            {job.type === "steam"
+                              ? "Steam Import"
+                              : "Bulk Import"}
+                            {job.sourceLabel ? ` · ${job.sourceLabel}` : ""}
+                          </p>
+                          <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-ink-muted">
+                            <Clock className="size-3" />
+                            {new Date(job.createdAt).toLocaleString()}
+                            <span>·</span>
+                            <span className="font-mono">
+                              {job.addedCount} added, {job.updatedCount} updated
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <Badge
-                        tone={
-                          job.status === "completed"
-                            ? "success"
-                            : job.status === "failed"
-                              ? "danger"
-                              : "primary"
-                        }
-                      >
-                        {job.status === "running"
-                          ? `${job.completed}/${job.total}`
-                          : job.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          tone={
+                            job.status === "completed"
+                              ? "success"
+                              : job.status === "failed"
+                                ? "danger"
+                                : "primary"
+                          }
+                        >
+                          {job.status === "running"
+                            ? `${job.completed}/${job.total}`
+                            : job.status}
+                        </Badge>
+                        <ChevronRight className="size-4 text-ink-muted transition-transform group-hover:translate-x-0.5 group-hover:text-ink" />
+                      </div>
                     </div>
                     {job.status === "running" && (
-                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-surface-muted">
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-surface-muted">
                         <div
-                          className={cn(
-                            "h-full rounded-full bg-primary transition-all",
-                          )}
+                          className="h-full rounded-full bg-primary transition-all duration-300"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

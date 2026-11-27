@@ -12,7 +12,7 @@ export function Spinner({
       role="status"
       aria-label={label}
       className={cn(
-        "inline-block size-6 animate-spin rounded-full border-2 border-primary-soft border-b-primary",
+        "inline-block size-6 animate-spin rounded-full border-2 border-primary/25 border-t-primary",
         className,
       )}
     />
