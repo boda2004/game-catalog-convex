@@ -212,6 +212,12 @@ export function getMetacriticClass(score: number): string {
   return "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-500/30 [html[data-theme='dark']_&]:text-rose-300";
 }
 
+export const PAGE_SIZE_OPTIONS = [12, 24, 48, 96] as const;
+
+export function getDefaultSortOrder(field: SortField): SortOrder {
+  return field === "name" ? "asc" : "desc";
+}
+
 export const SORT_OPTIONS: Array<{ value: SortField; label: string }> = [
   { value: "userAddedAt", label: "Date Added" },
   { value: "name", label: "Name" },
@@ -246,6 +252,89 @@ export interface CatalogFilterCriteria {
   statuses: GameStatus[];
   sortBy: SortField;
   sortOrder: SortOrder;
+}
+
+export interface FacetCounts {
+  platforms: Record<string, number>;
+  genres: Record<string, number>;
+  stores: Record<string, number>;
+  statuses: Record<string, number>;
+}
+
+/**
+ * Computes disjunctive facet counts in a single pass: each facet reflects all
+ * other active filters while preserving OR semantics within the same facet.
+ */
+export function computeFacetCounts(
+  games: readonly LibraryGame[],
+  criteria: Pick<
+    CatalogFilterCriteria,
+    "search" | "platforms" | "genres" | "stores" | "statuses"
+  >,
+): FacetCounts {
+  const query = criteria.search.trim().toLowerCase();
+  const platformSet = new Set(criteria.platforms.map((p) => p.toLowerCase()));
+  const genreSet = new Set(criteria.genres.map((g) => g.toLowerCase()));
+  const storeSet = new Set(criteria.stores);
+  const statusSet = new Set(criteria.statuses);
+
+  const platforms: Record<string, number> = {};
+  const genres: Record<string, number> = {};
+  const stores: Record<string, number> = {};
+  const statuses: Record<string, number> = {};
+
+  for (const game of games) {
+    if (query) {
+      const matchesQuery =
+        game.name.toLowerCase().includes(query) ||
+        game.genres.some((g) => g.toLowerCase().includes(query)) ||
+        game.platforms.some((p) => p.toLowerCase().includes(query)) ||
+        game.developers.some((d) => d.toLowerCase().includes(query));
+      if (!matchesQuery) continue;
+    }
+
+    const matchesPlatforms =
+      platformSet.size === 0 ||
+      game.platforms.some((p) => platformSet.has(p.toLowerCase()));
+    const matchesGenres =
+      genreSet.size === 0 ||
+      game.genres.some((g) => genreSet.has(g.toLowerCase()));
+    const matchesStores =
+      storeSet.size === 0 ||
+      (storeSet.has("no_store") && game.stores.length === 0) ||
+      game.stores.some((s) => storeSet.has(s));
+    const matchesStatuses =
+      statusSet.size === 0 ||
+      (game.status !== undefined && statusSet.has(game.status));
+
+    if (matchesGenres && matchesStores && matchesStatuses) {
+      for (const platform of game.platforms) {
+        platforms[platform] = (platforms[platform] ?? 0) + 1;
+      }
+    }
+
+    if (matchesPlatforms && matchesStores && matchesStatuses) {
+      for (const genre of game.genres) {
+        genres[genre] = (genres[genre] ?? 0) + 1;
+      }
+    }
+
+    if (matchesPlatforms && matchesGenres && matchesStatuses) {
+      if (game.stores.length === 0) {
+        stores.no_store = (stores.no_store ?? 0) + 1;
+      } else {
+        for (const store of game.stores) {
+          stores[store] = (stores[store] ?? 0) + 1;
+        }
+      }
+    }
+
+    if (matchesPlatforms && matchesGenres && matchesStores && game.status) {
+      statuses[game.status] = (statuses[game.status] ?? 0) + 1;
+    }
+  }
+
+  return { platforms, genres, stores, statuses };
 }
 
 export function filterAndSortGames(

@@ -8,7 +8,8 @@ export const PopoverTrigger = RadixPopover.Trigger;
 export function PopoverContent({
   className,
   align = "start",
-  sideOffset = 8,
+  sideOffset = 6,
+  collisionPadding = 8,
   ...props
 }: ComponentPropsWithoutRef<typeof RadixPopover.Content>) {
   return (
@@ -16,8 +17,9 @@ export function PopoverContent({
       <RadixPopover.Content
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={collisionPadding}
         className={cn(
-          "z-50 w-64 overflow-hidden rounded-xl border border-border-strong/80 bg-surface-elevated p-0 shadow-[0_16px_48px_rgba(0,0,0,0.38)] outline-hidden",
+          "popover-surface z-50 w-64 overflow-hidden rounded-xl border border-border-strong/90 bg-surface-elevated p-0 shadow-[0_18px_48px_rgba(0,0,0,0.42)] ring-1 ring-white/[0.04] outline-hidden",
           className,
         )}
         {...props}
