@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/boda2004/game-catalog-convex/compare/v2.1.0...v2.2.0) (2026-11-27)
+
+
+### Features
+
+* rewrite frontend UI with dark/light theme and modern catalog shell ([#31](https://github.com/boda2004/game-catalog-convex/issues/31)) ([8c60179](https://github.com/boda2004/game-catalog-convex/commit/8c601793156720d73a381ff2db9abc29296b4088))
+
 ## [2.1.0](https://github.com/boda2004/game-catalog-convex/compare/v2.0.0...v2.1.0) (2026-11-26)
 
 
