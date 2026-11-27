@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "./Popover";
 
@@ -7,11 +7,13 @@ export interface MultiSelectOption<T extends string = string> {
   value: T;
   label: string;
   count?: number;
+  dotClass?: string;
   disabled?: boolean;
 }
 
 export interface MultiSelectFilterProps<T extends string = string> {
   label: string;
+  icon?: ReactNode;
   options: ReadonlyArray<MultiSelectOption<T>>;
   selected: ReadonlyArray<T>;
   onToggle: (value: T) => void;
@@ -23,6 +25,7 @@ export interface MultiSelectFilterProps<T extends string = string> {
 
 export function MultiSelectFilter<T extends string = string>({
   label,
+  icon,
   options,
   selected,
   onToggle,
@@ -54,19 +57,25 @@ export function MultiSelectFilter<T extends string = string>({
         <button
           type="button"
           className={cn(
-            "inline-flex h-9 items-center justify-between gap-2 rounded-lg border px-3 text-sm transition-colors focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20",
+            "inline-flex h-9 items-center justify-between gap-2 rounded-xl border px-3 text-xs font-semibold transition-all duration-150 focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/25",
             selected.length > 0
-              ? "border-primary/40 bg-primary-soft/50 font-semibold text-primary-soft-ink"
-              : "border-border-strong bg-surface text-ink hover:bg-surface-subtle",
+              ? "border-primary/45 bg-primary-soft text-primary-soft-ink"
+              : "border-border-strong/80 bg-surface-elevated text-ink-secondary hover:bg-surface-muted hover:text-ink",
             triggerClassName,
           )}
         >
-          <span className="truncate">
-            {selected.length > 0 ? `${label} (${selected.length})` : label}
+          <span className="flex items-center gap-1.5 truncate">
+            {icon}
+            <span className="truncate">{label}</span>
+            {selected.length > 0 && (
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white tabular-nums">
+                {selected.length}
+              </span>
+            )}
           </span>
           <ChevronDown
             className={cn(
-              "size-4 shrink-0 text-ink-muted transition-transform",
+              "size-3.5 shrink-0 opacity-70 transition-transform duration-150",
               open && "rotate-180",
             )}
           />
@@ -83,7 +92,7 @@ export function MultiSelectFilter<T extends string = string>({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={`Filter ${label.toLowerCase()}...`}
-                  className="h-8 w-full rounded-md border border-border-strong bg-surface pl-8 pr-2 text-xs text-ink placeholder:text-ink-muted focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary"
+                  className="h-8 w-full rounded-lg border border-border-strong/70 bg-surface-subtle pl-8 pr-2 text-xs text-ink placeholder:text-ink-muted focus:border-primary focus:outline-hidden focus:ring-1 focus:ring-primary"
                 />
               </div>
             )}
@@ -94,16 +103,16 @@ export function MultiSelectFilter<T extends string = string>({
                   onClear();
                   setQuery("");
                 }}
-                className="h-8 rounded-md border border-border-strong px-2 text-xs font-semibold text-ink-secondary hover:bg-surface-subtle"
+                className="h-8 rounded-lg border border-border-strong/70 px-2.5 text-xs font-semibold text-ink-secondary transition-colors hover:bg-surface-muted hover:text-ink"
               >
                 Clear
               </button>
             )}
           </div>
         )}
-        <div className="max-h-56 overflow-y-auto p-1">
+        <div className="max-h-60 overflow-y-auto p-1.5">
           {filtered.length === 0 ? (
-            <p className="px-3 py-4 text-center text-xs text-ink-muted">
+            <p className="px-3 py-5 text-center text-xs text-ink-muted">
               No matches
             </p>
           ) : (
@@ -116,27 +125,37 @@ export function MultiSelectFilter<T extends string = string>({
                   disabled={opt.disabled}
                   onClick={() => onToggle(opt.value)}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-sm transition-colors disabled:opacity-50",
+                    "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors disabled:opacity-45",
                     isSelected
                       ? "bg-primary-soft font-medium text-primary-soft-ink"
-                      : "text-ink hover:bg-surface-subtle",
+                      : "text-ink hover:bg-surface-muted",
                   )}
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <span
                       className={cn(
-                        "flex size-4 shrink-0 items-center justify-center rounded border",
+                        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors",
                         isSelected
                           ? "border-primary bg-primary text-white"
                           : "border-border-strong bg-surface",
                       )}
                     >
-                      {isSelected && <Check className="size-3" />}
+                      {isSelected && <Check className="size-2.5 stroke-[3]" />}
                     </span>
-                    <span className="truncate">{opt.label}</span>
+                    {opt.dotClass && (
+                      <span
+                        className={cn(
+                          "size-2 shrink-0 rounded-full",
+                          opt.dotClass,
+                        )}
+                      />
+                    )}
+                    <span className="truncate text-[13px]">{opt.label}</span>
                   </span>
                   {opt.count !== undefined && (
-                    <span className="text-xs text-ink-muted">{opt.count}</span>
+                    <span className="font-mono text-[11px] tabular-nums text-ink-muted">
+                      {opt.count}
+                    </span>
                   )}
                 </button>
               );

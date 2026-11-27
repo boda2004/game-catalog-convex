@@ -1,34 +1,71 @@
 @import "tailwindcss";
 
 @theme {
-  --color-canvas: #fbf8ff;
+  /* Dark-first obsidian & luminous indigo design tokens */
+  --color-canvas: #090a0f;
+  --color-surface: #11131b;
+  --color-surface-elevated: #171a26;
+  --color-surface-subtle: #151824;
+  --color-surface-muted: #1e2233;
+
+  --color-border-subtle: #23273a;
+  --color-border-strong: #323852;
+
+  --color-ink: #f3f5fc;
+  --color-ink-secondary: #a5adc6;
+  --color-ink-muted: #6e7794;
+
+  --color-primary: #6366f1;
+  --color-primary-hover: #4f46e5;
+  --color-primary-soft: #1e2248;
+  --color-primary-soft-ink: #a5b4fc;
+
+  --color-danger: #f43f5e;
+  --color-danger-hover: #e11d48;
+  --color-danger-soft: #311420;
+
+  --color-success: #34d399;
+  --color-success-soft: #0f2c24;
+
+  --color-warning: #fbbf24;
+  --color-warning-soft: #2e240e;
+
+  --font-display: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-container: 0.75rem;
+}
+
+/* Crisp editorial light mode overrides */
+:root[data-theme="light"] {
+  --color-canvas: #f5f6fa;
   --color-surface: #ffffff;
-  --color-surface-subtle: #f5f2fa;
-  --color-surface-muted: #efedf4;
+  --color-surface-elevated: #ffffff;
+  --color-surface-subtle: #f1f3f9;
+  --color-surface-muted: #e6e9f2;
 
-  --color-border-subtle: #dbd9e1;
-  --color-border-strong: #c6c5d3;
+  --color-border-subtle: #e2e5ef;
+  --color-border-strong: #cbd1e1;
 
-  --color-ink: #1b1b21;
-  --color-ink-secondary: #454651;
-  --color-ink-muted: #767682;
+  --color-ink: #111422;
+  --color-ink-secondary: #4a5168;
+  --color-ink-muted: #78809a;
 
-  --color-primary: #2e3a8c;
-  --color-primary-hover: #142175;
-  --color-primary-soft: #dfe0ff;
-  --color-primary-soft-ink: #333f91;
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-soft: #eef2ff;
+  --color-primary-soft-ink: #3730a3;
 
-  --color-danger: #c62828;
-  --color-danger-hover: #9e1c1c;
-  --color-danger-soft: #fee2e2;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-danger-soft: #fef2f2;
 
-  --color-success: #15803d;
-  --color-success-soft: #dcfce7;
+  --color-success: #059669;
+  --color-success-soft: #ecfdf5;
 
-  --color-warning: #a16207;
-  --color-warning-soft: #fef3c7;
-
-  --radius-container: 0.5rem;
+  --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
 }
 
 @layer base {
@@ -40,30 +77,112 @@
     border-color: var(--color-border-subtle);
   }
 
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    scroll-behavior: smooth;
+  }
+
   body {
-    font-family:
-      "Manrope",
-      "Inter Variable",
-      ui-sans-serif,
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      Roboto,
-      "Helvetica Neue",
-      Arial,
-      sans-serif;
+    font-family: var(--font-sans);
     color: var(--color-ink);
     background-color: var(--color-canvas);
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
   }
 
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
   }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
+    color: var(--color-ink);
+  }
+}
+
+/* Ambient backdrop subtle radiance */
+.ambient-backdrop {
+  background-image:
+    radial-gradient(
+      900px 420px at 15% -10%,
+      color-mix(in oklab, var(--color-primary) 14%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      700px 360px at 88% -8%,
+      color-mix(in oklab, #a855f7 9%, transparent),
+      transparent 70%
+    );
+}
+
+:root[data-theme="light"] .ambient-backdrop {
+  background-image:
+    radial-gradient(
+      900px 420px at 15% -10%,
+      color-mix(in oklab, var(--color-primary) 7%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      700px 360px at 88% -8%,
+      color-mix(in oklab, #8b5cf6 5%, transparent),
+      transparent 70%
+    );
+}
+
+/* Custom sleek scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
 }
 
 .input-field {
-  @apply w-full rounded-lg border border-border-strong bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted transition-colors focus:border-primary focus:outline-hidden focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply w-full rounded-xl border border-border-strong bg-surface-subtle/70 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted transition-all duration-150 focus:border-primary focus:bg-surface focus:outline-hidden focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-subtle) 25%,
+    var(--color-surface-muted) 50%,
+    var(--color-surface-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }

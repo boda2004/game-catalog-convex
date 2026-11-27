@@ -3,6 +3,7 @@ import {
   useCompletePasswordRecovery,
   useCompleteSignUpWithEmailPassword,
 } from "@convex-dev/auth/methods/email-password/react";
+import { AlertCircle, Eye, EyeOff, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../../convex/_generated/api";
@@ -52,14 +53,19 @@ function LinkCard({
   buttonLabel?: string;
 }) {
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md flex-col items-center justify-center px-4">
-      <div className="w-full rounded-xl border border-border-subtle bg-surface p-6 text-center shadow-xs">
-        <h1 className="text-xl font-semibold text-ink">{title}</h1>
-        <p className="mt-2 text-sm text-ink-secondary">{message}</p>
+    <div className="mx-auto flex flex-1 w-full max-w-md flex-col items-center justify-center px-4 py-12">
+      <div className="w-full rounded-2xl border border-border-strong/70 bg-surface p-7 text-center shadow-2xl">
+        <div className="mx-auto mb-4 flex size-13 items-center justify-center rounded-2xl bg-danger-soft text-danger ring-1 ring-inset ring-danger/30">
+          <AlertCircle className="size-6" />
+        </div>
+        <h1 className="font-display text-xl font-bold text-ink">{title}</h1>
+        <p className="mt-2 text-sm leading-relaxed text-ink-secondary">
+          {message}
+        </p>
         <Button
           variant="primary"
           size="lg"
-          className="mt-5 w-full"
+          className="mt-6 w-full"
           onClick={onDone}
         >
           {buttonLabel}
@@ -71,9 +77,9 @@ function LinkCard({
 
 function LoadingView({ label }: { label: string }) {
   return (
-    <div className="flex min-h-[400px] flex-col items-center justify-center gap-3">
+    <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20">
       <Spinner className="size-8" label={label} />
-      <p className="text-sm text-ink-secondary">{label}</p>
+      <p className="text-sm font-medium text-ink-secondary">{label}</p>
     </div>
   );
 }
@@ -116,6 +122,7 @@ function ResetPasswordView({
 }) {
   const state = useCompletePasswordRecovery(api.auth, { emailCode });
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (state.status === "complete") {
@@ -139,14 +146,19 @@ function ResetPasswordView({
   }
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-md flex-col items-center justify-center px-4">
-      <div className="w-full rounded-xl border border-border-subtle bg-surface p-6 shadow-xs">
-        <h1 className="text-xl font-semibold text-ink">Set a new password</h1>
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 py-12">
+      <div className="w-full rounded-2xl border border-border-strong/70 bg-surface p-7 shadow-2xl">
+        <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-primary-soft text-primary-soft-ink ring-1 ring-inset ring-primary/30">
+          <KeyRound className="size-6" />
+        </div>
+        <h1 className="font-display text-xl font-bold text-ink">
+          Set a new password
+        </h1>
         <p className="mt-1.5 text-sm text-ink-secondary">
           Choose a new password (at least 10 characters) for your account.
         </p>
         <form
-          className="mt-4 flex flex-col gap-3.5"
+          className="mt-5 flex flex-col gap-3.5"
           onSubmit={(e) => {
             e.preventDefault();
             void (async () => {
@@ -159,17 +171,32 @@ function ResetPasswordView({
             })();
           }}
         >
-          <input
-            className="input-field"
-            type="password"
-            name="newPassword"
-            autoComplete="new-password"
-            placeholder="New password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            disabled={state.pending}
-            required
-          />
+          <div className="relative">
+            <input
+              className="input-field pr-10"
+              type={showPassword ? "text" : "password"}
+              name="newPassword"
+              autoComplete="new-password"
+              placeholder="New password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={state.pending}
+              required
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-muted hover:text-ink"
+            >
+              {showPassword ? (
+                <EyeOff className="size-4" />
+              ) : (
+                <Eye className="size-4" />
+              )}
+            </button>
+          </div>
           <Button
             variant="primary"
             size="lg"

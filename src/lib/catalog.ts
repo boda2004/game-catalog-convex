@@ -45,6 +45,8 @@ export interface StoreMeta {
   label: string;
   shortLabel: string;
   badgeClass: string;
+  dotClass: string;
+  barClass: string;
 }
 
 export const STORE_META: Record<StoreId, StoreMeta> = {
@@ -52,61 +54,91 @@ export const STORE_META: Record<StoreId, StoreMeta> = {
     id: "steam",
     label: "Steam",
     shortLabel: "Steam",
-    badgeClass: "bg-[#ffdbc7] text-[#723603]",
+    badgeClass:
+      "bg-sky-500/15 text-sky-600 ring-1 ring-inset ring-sky-500/25 [html[data-theme='dark']_&]:text-sky-300",
+    dotClass: "bg-sky-400",
+    barClass: "bg-sky-500",
   },
   epic: {
     id: "epic",
     label: "Epic Games",
     shortLabel: "Epic",
-    badgeClass: "bg-surface-subtle text-ink-secondary ring-1 ring-inset ring-border-subtle",
+    badgeClass:
+      "bg-slate-500/15 text-slate-700 ring-1 ring-inset ring-slate-500/25 [html[data-theme='dark']_&]:text-slate-200",
+    dotClass: "bg-slate-400",
+    barClass: "bg-slate-400",
   },
   gog: {
     id: "gog",
     label: "GOG",
     shortLabel: "GOG",
-    badgeClass: "bg-[#efe6ff] text-[#4c1d95]",
+    badgeClass:
+      "bg-violet-500/15 text-violet-700 ring-1 ring-inset ring-violet-500/25 [html[data-theme='dark']_&]:text-violet-300",
+    dotClass: "bg-violet-400",
+    barClass: "bg-violet-500",
   },
   playstation: {
     id: "playstation",
     label: "PlayStation",
     shortLabel: "PS",
-    badgeClass: "bg-[#dbeafe] text-[#1e40af]",
+    badgeClass:
+      "bg-blue-500/15 text-blue-700 ring-1 ring-inset ring-blue-500/25 [html[data-theme='dark']_&]:text-blue-300",
+    dotClass: "bg-blue-500",
+    barClass: "bg-blue-500",
   },
   xbox: {
     id: "xbox",
     label: "Xbox",
     shortLabel: "Xbox",
-    badgeClass: "bg-[#dcfce7] text-[#166534]",
+    badgeClass:
+      "bg-emerald-500/15 text-emerald-700 ring-1 ring-inset ring-emerald-500/25 [html[data-theme='dark']_&]:text-emerald-300",
+    dotClass: "bg-emerald-400",
+    barClass: "bg-emerald-500",
   },
   nintendo: {
     id: "nintendo",
     label: "Nintendo",
     shortLabel: "Nintendo",
-    badgeClass: "bg-[#fee2e2] text-[#991b1b]",
+    badgeClass:
+      "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-500/25 [html[data-theme='dark']_&]:text-rose-300",
+    dotClass: "bg-rose-500",
+    barClass: "bg-rose-500",
   },
   itch: {
     id: "itch",
     label: "itch.io",
     shortLabel: "itch.io",
-    badgeClass: "bg-[#fce7f3] text-[#9d174d]",
+    badgeClass:
+      "bg-pink-500/15 text-pink-700 ring-1 ring-inset ring-pink-500/25 [html[data-theme='dark']_&]:text-pink-300",
+    dotClass: "bg-pink-400",
+    barClass: "bg-pink-500",
   },
   ea: {
     id: "ea",
     label: "EA App",
     shortLabel: "EA",
-    badgeClass: "bg-[#ffedd5] text-[#9a3412]",
+    badgeClass:
+      "bg-orange-500/15 text-orange-700 ring-1 ring-inset ring-orange-500/25 [html[data-theme='dark']_&]:text-orange-300",
+    dotClass: "bg-orange-400",
+    barClass: "bg-orange-500",
   },
   ubisoft: {
     id: "ubisoft",
     label: "Ubisoft Connect",
     shortLabel: "Ubisoft",
-    badgeClass: "bg-[#e0e7ff] text-[#3730a3]",
+    badgeClass:
+      "bg-indigo-500/15 text-indigo-700 ring-1 ring-inset ring-indigo-500/25 [html[data-theme='dark']_&]:text-indigo-300",
+    dotClass: "bg-indigo-400",
+    barClass: "bg-indigo-500",
   },
   other: {
     id: "other",
     label: "Other / Physical",
     shortLabel: "Other",
-    badgeClass: "bg-surface-muted text-ink-secondary",
+    badgeClass:
+      "bg-surface-muted text-ink-secondary ring-1 ring-inset ring-border-subtle",
+    dotClass: "bg-ink-muted",
+    barClass: "bg-ink-muted",
   },
 };
 
@@ -119,35 +151,66 @@ export interface StatusMeta {
   id: GameStatus;
   label: string;
   badgeClass: string;
+  glassClass: string;
+  dotClass: string;
 }
 
 export const STATUS_META: Record<GameStatus, StatusMeta> = {
   playing: {
     id: "playing",
     label: "Playing",
-    badgeClass: "bg-[#dbeafe] text-[#1d4ed8]",
+    badgeClass:
+      "bg-sky-500/15 text-sky-700 ring-1 ring-inset ring-sky-500/30 [html[data-theme='dark']_&]:text-sky-300",
+    glassClass: "bg-sky-950/80 text-sky-200 ring-1 ring-inset ring-sky-400/35",
+    dotClass: "bg-sky-400",
   },
   backlog: {
     id: "backlog",
     label: "Backlog",
-    badgeClass: "bg-surface-subtle text-ink-secondary ring-1 ring-inset ring-border-subtle",
+    badgeClass:
+      "bg-violet-500/15 text-violet-700 ring-1 ring-inset ring-violet-500/30 [html[data-theme='dark']_&]:text-violet-300",
+    glassClass:
+      "bg-slate-950/80 text-slate-200 ring-1 ring-inset ring-white/15",
+    dotClass: "bg-violet-400",
   },
   completed: {
     id: "completed",
     label: "Completed",
-    badgeClass: "bg-[#dcfce7] text-[#166534]",
+    badgeClass:
+      "bg-emerald-500/15 text-emerald-700 ring-1 ring-inset ring-emerald-500/30 [html[data-theme='dark']_&]:text-emerald-300",
+    glassClass:
+      "bg-emerald-950/80 text-emerald-200 ring-1 ring-inset ring-emerald-400/35",
+    dotClass: "bg-emerald-400",
   },
   wishlist: {
     id: "wishlist",
     label: "Wishlist",
-    badgeClass: "bg-[#fef3c7] text-[#92400e]",
+    badgeClass:
+      "bg-amber-500/15 text-amber-700 ring-1 ring-inset ring-amber-500/30 [html[data-theme='dark']_&]:text-amber-300",
+    glassClass:
+      "bg-amber-950/80 text-amber-200 ring-1 ring-inset ring-amber-400/35",
+    dotClass: "bg-amber-400",
   },
   dropped: {
     id: "dropped",
     label: "Dropped",
-    badgeClass: "bg-[#fee2e2] text-[#991b1b]",
+    badgeClass:
+      "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-500/30 [html[data-theme='dark']_&]:text-rose-300",
+    glassClass:
+      "bg-rose-950/80 text-rose-200 ring-1 ring-inset ring-rose-400/35",
+    dotClass: "bg-rose-400",
   },
 };
+
+export function getMetacriticClass(score: number): string {
+  if (score >= 75) {
+    return "bg-emerald-500/15 text-emerald-600 ring-1 ring-inset ring-emerald-500/30 [html[data-theme='dark']_&]:text-emerald-300";
+  }
+  if (score >= 50) {
+    return "bg-amber-500/15 text-amber-700 ring-1 ring-inset ring-amber-500/30 [html[data-theme='dark']_&]:text-amber-300";
+  }
+  return "bg-rose-500/15 text-rose-700 ring-1 ring-inset ring-rose-500/30 [html[data-theme='dark']_&]:text-rose-300";
+}
 
 export const SORT_OPTIONS: Array<{ value: SortField; label: string }> = [
   { value: "userAddedAt", label: "Date Added" },
@@ -274,6 +337,13 @@ export function formatPlaytime(minutes?: number): string | null {
   return hours >= 10 ? `${Math.round(hours)}h` : `${hours.toFixed(1)}h`;
 }
 
+export function formatTotalHours(totalMinutes: number): string {
+  if (totalMinutes <= 0) return "0h";
+  const hours = Math.round(totalMinutes / 60);
+  if (hours === 0) return `${totalMinutes}m`;
+  return `${hours.toLocaleString()}h`;
+}
+
 export function formatReleaseYear(released?: string): string | null {
   if (!released) return null;
   const parsed = new Date(released);
@@ -285,5 +355,9 @@ export function formatDate(value?: string | number): string | null {
   if (value === undefined || value === "") return null;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toLocaleDateString();
+  return parsed.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }

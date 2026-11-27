@@ -1,17 +1,28 @@
-import { CloudDownload, History, ListPlus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { CheckCircle2, Clock, Gamepad2, Play, Store } from "lucide-react";
+import {
+  STATUS_META,
+  STORE_IDS,
+  STORE_META,
+  formatTotalHours,
+  getStoreLabel,
+  type GameStatus,
+  type StoreFilter,
+} from "@/lib/catalog";
+import { cn } from "@/lib/utils";
 
 interface CatalogStatsHeaderProps {
   totalGames: number;
   filteredCount: number;
   startIndex: number;
   endIndex: number;
+  totalPlaytimeMinutes: number;
   byStore: Record<string, number>;
+  byStatus: Record<string, number>;
   noStoreCount: number;
-  onOpenSteamImport: () => void;
-  onOpenAddGame: () => void;
-  onOpenBulkImport: () => void;
-  onOpenImportHistory: () => void;
+  selectedStores: StoreFilter[];
+  selectedStatuses: GameStatus[];
+  onToggleStore: (store: StoreFilter) => void;
+  onToggleStatus: (status: GameStatus) => void;
 }
 
 export function CatalogStatsHeader({
@@ -19,73 +30,188 @@ export function CatalogStatsHeader({
   filteredCount,
   startIndex,
   endIndex,
+  totalPlaytimeMinutes,
   byStore,
+  byStatus,
   noStoreCount,
-  onOpenSteamImport,
-  onOpenAddGame,
-  onOpenBulkImport,
-  onOpenImportHistory,
+  selectedStores,
+  selectedStatuses,
+  onToggleStore,
+  onToggleStatus,
 }: CatalogStatsHeaderProps) {
-  const kpis = [
-    { label: "Total", value: totalGames },
-    { label: "Steam", value: byStore.steam ?? 0 },
-    { label: "Epic", value: byStore.epic ?? 0 },
-    { label: "GOG", value: byStore.gog ?? 0 },
-    { label: "No store", value: noStoreCount },
-  ];
+  const playingCount = byStatus.playing ?? 0;
+  const completedCount = byStatus.completed ?? 0;
+
+  // Dynamic heading reflects single active store/status selection
+  let heading = "My Games";
+  if (selectedStatuses.length === 1 && selectedStores.length === 0) {
+    heading = STATUS_META[selectedStatuses[0]].label;
+  } else if (selectedStores.length === 1 && selectedStatuses.length === 0) {
+    heading = getStoreLabel(selectedStores[0]);
+  }
+
+  // Top storefronts for interactive distribution bar
+  const storeSegments: Array<{
+    id: StoreFilter;
+    label: string;
+    count: number;
+    barClass: string;
+    dotClass: string;
+  }> = [
+    ...STORE_IDS.map((id) => ({
+      id,
+      label: STORE_META[id].shortLabel,
+      count: byStore[id] ?? 0,
+      barClass: STORE_META[id].barClass,
+      dotClass: STORE_META[id].dotClass,
+    })),
+    ...(noStoreCount > 0
+      ? [
+          {
+            id: "no_store" as const,
+            label: "Unassigned",
+            count: noStoreCount,
+            barClass: "bg-ink-muted/50",
+            dotClass: "bg-ink-muted/60",
+          },
+        ]
+      : []),
+  ]
+    .filter((s) => s.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const totalStoreEntries = storeSegments.reduce((sum, s) => sum + s.count, 0);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-surface p-4">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-ink">
-            My Games
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
+            {heading}
           </h1>
-          <p className="mt-0.5 text-sm text-ink-secondary">
+          <p className="mt-1 text-sm text-ink-secondary">
             {filteredCount === 0
               ? totalGames === 0
-                ? "No games in your collection yet"
-                : "No games match your active filters"
-              : `Showing ${startIndex}–${endIndex} of ${filteredCount} ${filteredCount === 1 ? "game" : "games"}${filteredCount !== totalGames ? ` (${totalGames} total)` : ""}`}
+                ? "Start adding games to populate your personal catalog"
+                : "No titles match your active filters"
+              : `Showing ${startIndex}–${endIndex} of ${filteredCount} ${filteredCount === 1 ? "title" : "titles"}${filteredCount !== totalGames ? ` · ${totalGames} in library` : ""}`}
           </p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:min-w-[540px]">
-          {kpis.map((kpi) => (
-            <div
-              key={kpi.label}
-              className="rounded-lg border border-border-subtle bg-canvas px-3 py-2.5"
+      {/* High-signal metric cards */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
+            <span>Total Library</span>
+            <Gamepad2 className="size-4 text-primary" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="font-display text-2xl font-extrabold tabular-nums text-ink">
+              {totalGames.toLocaleString()}
+            </span>
+            <span className="text-xs text-ink-muted">
+              {totalGames === 1 ? "game" : "games"}
+            </span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
+            <span>Tracked Playtime</span>
+            <Clock className="size-4 text-amber-400" />
+          </div>
+          <div className="mt-2 flex items-baseline gap-2">
+            <span className="font-display text-2xl font-extrabold tabular-nums text-ink">
+              {formatTotalHours(totalPlaytimeMinutes)}
+            </span>
+            <span className="text-xs text-ink-muted">logged</span>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
+            <span>Active &amp; Finished</span>
+            <CheckCircle2 className="size-4 text-emerald-400" />
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleStatus("playing")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
+                selectedStatuses.includes("playing")
+                  ? "border-sky-400/50 bg-sky-500/20 text-sky-300"
+                  : "border-border-subtle bg-surface-subtle text-ink hover:bg-surface-muted",
+              )}
             >
-              <div className="text-[11px] font-bold uppercase tracking-[0.05em] text-ink-muted">
-                {kpi.label}
+              <Play className="size-3 fill-sky-400 text-sky-400" />
+              <span className="tabular-nums">{playingCount}</span>
+              <span className="text-ink-muted">playing</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleStatus("completed")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
+                selectedStatuses.includes("completed")
+                  ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-300"
+                  : "border-border-subtle bg-surface-subtle text-ink hover:bg-surface-muted",
+              )}
+            >
+              <CheckCircle2 className="size-3 text-emerald-400" />
+              <span className="tabular-nums">{completedCount}</span>
+              <span className="text-ink-muted">done</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border-subtle bg-surface/90 p-4">
+          <div className="flex items-center justify-between text-xs font-semibold text-ink-muted">
+            <span>Storefront Split</span>
+            <Store className="size-4 text-violet-400" />
+          </div>
+          {storeSegments.length === 0 ? (
+            <p className="mt-3 text-xs text-ink-muted">No storefronts yet</p>
+          ) : (
+            <div className="mt-2.5 space-y-2">
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                {storeSegments.map((seg) => (
+                  <button
+                    key={seg.id}
+                    type="button"
+                    title={`${seg.label}: ${seg.count}`}
+                    onClick={() => onToggleStore(seg.id)}
+                    style={{
+                      width: `${(seg.count / Math.max(1, totalStoreEntries)) * 100}%`,
+                    }}
+                    className={cn(
+                      "h-full transition-opacity hover:opacity-80",
+                      seg.barClass,
+                    )}
+                  />
+                ))}
               </div>
-              <div className="mt-0.5 text-xl font-bold tabular-nums text-ink">
-                {kpi.value}
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {storeSegments.slice(0, 3).map((seg) => (
+                  <button
+                    key={seg.id}
+                    type="button"
+                    onClick={() => onToggleStore(seg.id)}
+                    className="inline-flex items-center gap-1 text-[11px] font-medium text-ink-secondary transition-colors hover:text-ink"
+                  >
+                    <span className={cn("size-1.5 rounded-full", seg.dotClass)} />
+                    <span>{seg.label}</span>
+                    <span className="font-mono text-ink-muted tabular-nums">
+                      {seg.count}
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
-
-      {/* Mobile / tablet quick actions */}
-      <div className="mt-4 flex flex-wrap gap-2 lg:hidden">
-        <Button variant="primary" size="sm" onClick={onOpenSteamImport}>
-          <CloudDownload className="size-3.5" />
-          Import Steam
-        </Button>
-        <Button variant="secondary" size="sm" onClick={onOpenAddGame}>
-          <Plus className="size-3.5" />
-          Add game
-        </Button>
-        <Button variant="secondary" size="sm" onClick={onOpenBulkImport}>
-          <ListPlus className="size-3.5" />
-          Bulk import
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onOpenImportHistory}>
-          <History className="size-3.5" />
-          Imports
-        </Button>
-      </div>
-    </div>
+    </section>
   );
 }

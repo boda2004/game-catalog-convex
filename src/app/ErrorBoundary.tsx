@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 
@@ -28,23 +28,26 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
-          <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-danger-soft text-danger">
-            <AlertTriangle className="size-6" />
+        <div className="flex min-h-screen items-center justify-center bg-canvas px-4">
+          <div className="w-full max-w-md rounded-2xl border border-border-subtle bg-surface p-8 text-center shadow-xl">
+            <div className="mx-auto mb-4 flex size-13 items-center justify-center rounded-2xl bg-danger-soft text-danger ring-1 ring-inset ring-danger/30">
+              <AlertTriangle className="size-6" />
+            </div>
+            <h1 className="font-display text-xl font-bold text-ink">
+              Something went wrong
+            </h1>
+            <p className="mt-2 text-sm text-ink-secondary">
+              {this.state.message}
+            </p>
+            <Button
+              variant="primary"
+              className="mt-6 w-full"
+              onClick={() => window.location.reload()}
+            >
+              <RotateCcw className="size-4" />
+              Reload app
+            </Button>
           </div>
-          <h1 className="text-lg font-semibold text-ink">
-            Something went wrong
-          </h1>
-          <p className="mt-1.5 text-sm text-ink-secondary">
-            {this.state.message}
-          </p>
-          <Button
-            variant="primary"
-            className="mt-5"
-            onClick={() => window.location.reload()}
-          >
-            Reload app
-          </Button>
         </div>
       );
     }
