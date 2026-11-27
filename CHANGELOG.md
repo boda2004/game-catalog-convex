@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.0](https://github.com/boda2004/game-catalog-convex/compare/v2.2.0...v2.3.0) (2026-11-27)
+
+
+### Features
+
+* redesign catalog filters, dropdowns, and pagination UX ([#33](https://github.com/boda2004/game-catalog-convex/issues/33)) ([023bc8b](https://github.com/boda2004/game-catalog-convex/commit/023bc8b39893537de011530caf7017a6d2e96c99))
+
 ## [2.2.0](https://github.com/boda2004/game-catalog-convex/compare/v2.1.0...v2.2.0) (2026-11-27)
 
 
